@@ -1,0 +1,22 @@
+services:
+  postgres:
+    image: postgres:16.10-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: micow
+      POSTGRES_USER: micow
+      POSTGRES_PASSWORD: micow
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - micow-postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U micow -d micow"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    security_opt:
+      - no-new-privileges:true
+
+volumes:
+  micow-postgres:
