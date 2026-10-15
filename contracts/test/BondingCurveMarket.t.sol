@@ -96,7 +96,6 @@ contract BondingCurveMarketTest is Test {
         RejectingFeeRecipient rejector = new RejectingFeeRecipient();
         LaunchpadFactory rejectingFactory = new LaunchpadFactory(address(rejector));
         vm.deal(address(this), 1 ether);
-
         (address tokenAddress, address marketAddress, uint256 tokensOut) =
             rejector.createAndBuy{value: 0.1 ether}(rejectingFactory);
         BondingCurveMarket rejectingMarket = BondingCurveMarket(payable(marketAddress));
@@ -104,10 +103,7 @@ contract BondingCurveMarketTest is Test {
         assertGt(tokensOut, 0);
         assertEq(LaunchToken(tokenAddress).balanceOf(address(rejector)), tokensOut);
         assertGt(rejectingMarket.claimableFees(address(rejector)), 0);
-        assertEq(
-            address(rejectingMarket).balance,
-            rejectingMarket.realEthReserve() + rejectingMarket.totalClaimableFees()
-        );
+        assertEq(address(rejectingMarket).balance, rejectingMarket.realEthReserve() + rejectingMarket.totalClaimableFees());
     }
 
     function testDirectEtherTransferReverts() public {

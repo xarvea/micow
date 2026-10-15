@@ -70,8 +70,7 @@ contract LaunchpadInvariantTest is StdInvariant, Test {
 
     function invariant_FeesStayWithinHardCap() public view {
         assertLe(
-            uint256(market.protocolFeeBps()) + uint256(market.creatorFeeBps()),
-            uint256(market.MAX_COMBINED_FEE_BPS())
+            uint256(market.protocolFeeBps()) + uint256(market.creatorFeeBps()), uint256(market.MAX_COMBINED_FEE_BPS())
         );
     }
 }
