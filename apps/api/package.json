@@ -10,6 +10,7 @@
     "lint": "biome lint src",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "test": "vitest run",
+    "test:integration": "vitest run src/app.integration.test.ts",
     "db:migrate": "tsx src/migrate.ts"
   },
   "dependencies": {

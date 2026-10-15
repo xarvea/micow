@@ -2,6 +2,7 @@ import dotenv from "dotenv";
 import { Pool, type PoolClient } from "pg";
 import { createPublicClient, decodeEventLog, defineChain, http, parseAbi, toEventSelector, type Address, type Hex } from "viem";
 import { eventIdentity, findCommonAncestor, type StoredBlock } from "./reorg.js";
+import { insertIndexedEvent, rollbackAfter } from "./store.js";
 
 dotenv.config({ path: process.env.DOTENV_CONFIG_PATH ?? "../../.env" });
 type IndexedLog = {
@@ -43,28 +44,6 @@ const pool = new Pool({
   connectionTimeoutMillis: 3_000,
 });
 
-function serialize(value: unknown): string {
-  return JSON.stringify(value, (_key, item: unknown) => typeof item === "bigint" ? item.toString() : item) ?? "null";
-}
-
-async function rollbackAfter(ancestor: bigint): Promise<void> {
-  const db = await pool.connect();
-  try {
-    await db.query("BEGIN");
-    await db.query("DELETE FROM trades WHERE chain_id = $1 AND block_number > $2", [chainId, ancestor.toString()]);
-    await db.query("DELETE FROM tokens WHERE chain_id = $1 AND created_block > $2", [chainId, ancestor.toString()]);
-    await db.query("DELETE FROM indexed_events WHERE chain_id = $1 AND block_number > $2", [chainId, ancestor.toString()]);
-    await db.query("DELETE FROM indexed_blocks WHERE chain_id = $1 AND block_number > $2", [chainId, ancestor.toString()]);
-    await db.query("COMMIT");
-    console.warn("Reorg rollback completed at block " + ancestor.toString());
-  } catch (error) {
-    await db.query("ROLLBACK");
-    throw error;
-  } finally {
-    db.release();
-  }
-}
-
 async function repairReorg(): Promise<void> {
   const last = await pool.query("SELECT block_number::text, block_hash FROM indexed_blocks WHERE chain_id = $1 ORDER BY block_number DESC LIMIT 1", [chainId]);
   if (last.rowCount === 0) return;
@@ -80,7 +59,9 @@ async function repairReorg(): Promise<void> {
     try { return (await client.getBlock({ blockNumber: number })).hash; }
     catch { return null; }
   });
-  await rollbackAfter(ancestor ?? BigInt(startBlock) - 1n);
+  const rollbackPoint = ancestor ?? BigInt(startBlock) - 1n;
+  await rollbackAfter(pool, chainId, rollbackPoint);
+  console.warn("Reorg rollback completed at block " + rollbackPoint.toString());
 }
 
 async function persistBlock(blockNumber: bigint, blockHash: Hex, parentHash: Hex, logs: readonly IndexedLog[]): Promise<void> {
@@ -111,12 +92,21 @@ async function persistBlock(blockNumber: bigint, blockHash: Hex, parentHash: Hex
       }) as unknown as { eventName: string; args: Record<string, unknown> };
       const args = decoded.args;
       const identity = eventIdentity(chainId, log.transactionHash, log.logIndex);
-      const inserted = await db.query(
-        "INSERT INTO indexed_events (chain_id, event_id, tx_hash, log_index, block_number, block_hash, contract_address, topic0, topics, data, event_name, payload) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9::jsonb,$10,$11,$12::jsonb) ON CONFLICT (chain_id, tx_hash, log_index) DO NOTHING RETURNING event_id",
-        [chainId, identity, log.transactionHash, log.logIndex, blockNumber.toString(), blockHash, log.address,
-          topic0, serialize(log.topics), log.data, decoded.eventName, serialize(args)],
-      );
-      if (inserted.rowCount === 0) continue;
+      const inserted = await insertIndexedEvent(db, {
+        chainId,
+        eventId: identity,
+        txHash: log.transactionHash,
+        logIndex: log.logIndex,
+        blockNumber,
+        blockHash,
+        contractAddress: log.address,
+        topic0,
+        topics: log.topics,
+        data: log.data,
+        eventName: decoded.eventName,
+        payload: args,
+      });
+      if (!inserted) continue;
 
       if (decoded.eventName === "TokenCreated") {
         await db.query(
