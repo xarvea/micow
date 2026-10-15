@@ -8,10 +8,12 @@ import {BondingCurveMarket} from "../src/BondingCurveMarket.sol";
 
 contract LaunchpadFactoryTest is Test {
     LaunchpadFactory internal factory;
-    address internal protocolRecipient = makeAddr("protocol");
-    address internal creator = makeAddr("creator");
+    address internal protocolRecipient;
+    address internal creator;
 
     function setUp() public {
+        protocolRecipient = makeAddr("protocol");
+        creator = makeAddr("creator");
         factory = new LaunchpadFactory(protocolRecipient);
     }
 

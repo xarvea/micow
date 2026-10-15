@@ -9,12 +9,15 @@ import {BondingCurveMarket} from "../src/BondingCurveMarket.sol";
 contract BondingCurveMarketTest is Test {
     LaunchToken internal token;
     BondingCurveMarket internal market;
-    address internal protocolRecipient = makeAddr("protocol");
-    address internal creator = makeAddr("creator");
-    address internal trader = makeAddr("trader");
+    address internal protocolRecipient;
+    address internal creator;
+    address internal trader;
 
     function setUp() public {
         vm.warp(100);
+        protocolRecipient = makeAddr("protocol");
+        creator = makeAddr("creator");
+        trader = makeAddr("trader");
         LaunchpadFactory factory = new LaunchpadFactory(protocolRecipient);
         vm.prank(creator);
         (address tokenAddress, address marketAddress) = factory.createToken(
