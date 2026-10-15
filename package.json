@@ -1,0 +1,21 @@
+{
+  "name": "micow-launchpad",
+  "private": true,
+  "version": "0.1.0",
+  "packageManager": "pnpm@10.26.1",
+  "engines": {
+    "node": "20.20.x"
+  },
+  "scripts": {
+    "lint": "pnpm -r --if-present lint",
+    "typecheck": "pnpm -r --if-present typecheck",
+    "test": "pnpm -r --if-present test",
+    "build": "pnpm -r --if-present build",
+    "test:contracts": "forge test",
+    "check:contracts": "forge fmt --check && forge build --sizes && forge test"
+  },
+  "devDependencies": {
+    "turbo": "^2.5.6",
+    "typescript": "~5.9.3"
+  }
+}
