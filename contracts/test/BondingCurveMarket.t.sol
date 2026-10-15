@@ -103,7 +103,9 @@ contract BondingCurveMarketTest is Test {
         assertGt(tokensOut, 0);
         assertEq(LaunchToken(tokenAddress).balanceOf(address(rejector)), tokensOut);
         assertGt(rejectingMarket.claimableFees(address(rejector)), 0);
-        assertEq(address(rejectingMarket).balance, rejectingMarket.realEthReserve() + rejectingMarket.totalClaimableFees());
+        assertEq(
+            address(rejectingMarket).balance, rejectingMarket.realEthReserve() + rejectingMarket.totalClaimableFees()
+        );
     }
 
     function testDirectEtherTransferReverts() public {

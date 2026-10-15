@@ -54,3 +54,40 @@ footer{display:flex;align-items:center;justify-content:space-between;gap:24px;pa
 footer p{color:#677387;font-size:11px;text-align:right}
 @media(max-width:850px){.hero{grid-template-columns:1fr;padding-top:75px;gap:55px}.protocol-card{max-width:560px;width:100%;margin:auto}.feature-grid{grid-template-columns:1fr}.launch-status{align-items:flex-start;flex-direction:column}.topbar-right{justify-content:flex-end}}
 @media(max-width:560px){.topbar{align-items:flex-start}.topbar-right{flex-direction:column;align-items:flex-end}.network-pill{font-size:9px}.hero h1{font-size:54px}.hero-description{font-size:15px}.protocol-card{min-height:390px}.card-orbit{top:30px;transform:translateX(-50%) scale(.85)}.protocol-card-footer{bottom:82px}.launch-status{padding-top:50px;padding-bottom:50px}footer{align-items:flex-start;flex-direction:column}footer p{text-align:left}}
+
+.section-intro{max-width:720px;color:var(--muted);font-size:14px;line-height:1.75}
+.launchpad-section{padding:86px clamp(20px,8vw,120px) 100px;background:radial-gradient(ellipse at 10% 0%,#17223455,transparent 45%)}
+.launchpad-section>.section-heading{max-width:1440px}
+.create-panel{max-width:1440px;margin:34px auto 60px;padding:clamp(20px,3vw,34px);border:1px solid var(--line);border-radius:14px;background:linear-gradient(145deg,#111824,#0b1018)}
+.create-panel-heading,.token-list-heading,.token-card-heading{display:flex;align-items:center;justify-content:space-between;gap:18px}
+.create-panel-heading h3,.token-list-heading h3{margin:8px 0 0;font-size:25px;letter-spacing:-.04em}
+.create-form{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:25px 0 12px}
+.create-form label,.trade-panel label{display:flex;flex-direction:column;gap:8px;color:#aeb9ca;font-size:12px}
+.create-form input,.trade-panel input{width:100%;min-height:44px;padding:0 13px;border:1px solid #2a3547;border-radius:7px;background:#080d15;color:var(--text);font:13px monospace;outline:none}
+.create-form input:focus,.trade-panel input:focus{border-color:var(--accent);box-shadow:0 0 0 2px #a7f36b15}
+.metadata-field{grid-column:1/-1}
+.form-hint{color:#78869b;font-size:11px;line-height:1.6}
+.notice{padding:13px 15px;border:1px solid #d7a54c55;border-radius:8px;background:#d7a54c0a;color:#e7c98d;font-size:12px;line-height:1.65}
+.create-panel>.button{margin-top:8px}
+.token-list-heading{max-width:1440px;margin:0 auto 20px}
+.token-list{display:grid;grid-template-columns:1fr;gap:16px;max-width:1440px;margin:auto}
+.token-card{padding:23px;border:1px solid var(--line);border-radius:13px;background:linear-gradient(145deg,#111824,#0b1018)}
+.token-card-heading h3{margin:9px 0;font-size:21px}
+.token-symbol{color:var(--accent);font:12px monospace}
+.token-address{overflow-wrap:anywhere;color:#718096;font:10px monospace}
+.token-stats{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:20px 0;padding:16px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.token-stats>div{display:flex;flex-direction:column;gap:7px}
+.token-stats strong{font:13px monospace}
+.trade-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.trade-panel{padding:17px;border:1px solid #202a39;border-radius:9px;background:#090e16}
+.trade-panel h4{margin:0 0 16px;font-size:14px}
+.quote-line{display:flex;align-items:center;justify-content:space-between;gap:10px;color:#7e8ba0;font-size:11px}
+.quote-line strong{color:#dce5f1;font:11px monospace;text-align:right}
+.full-width{width:100%;margin-top:7px}
+.fee-note{color:#68768a;font-size:10px;line-height:1.6}
+.transaction-status,.transaction-success{font-size:12px;line-height:1.6}
+.transaction-status{color:var(--cyan)}
+.transaction-success{color:var(--accent);overflow-wrap:anywhere}
+.transaction-success a{color:var(--cyan);text-decoration:underline}
+.empty-state{padding:24px;border:1px dashed #2a3547;border-radius:10px;color:var(--muted);font-size:13px;text-align:center}
+@media(max-width:650px){.create-form,.trade-grid{grid-template-columns:1fr}.metadata-field{grid-column:auto}.create-panel-heading,.token-list-heading,.token-card-heading{align-items:flex-start;flex-direction:column}.token-card{padding:16px}.token-card-heading{gap:8px}.launchpad-section{padding-top:60px;padding-bottom:65px}}
