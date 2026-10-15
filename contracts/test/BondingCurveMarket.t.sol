@@ -21,7 +21,6 @@ contract RejectingFeeRecipient {
     }
 }
 
-
 contract ReentrantFeeRecipient {
     BondingCurveMarket public market;
 
@@ -108,7 +107,6 @@ contract BondingCurveMarketTest is Test {
         market.sell(bought / 2, 0, block.timestamp);
     }
 
-
     function testTinySellRevertsWhenOutputRoundsToZero() public {
         vm.prank(trader);
         market.buy{value: 0.1 ether}(0, block.timestamp);
@@ -145,10 +143,10 @@ contract BondingCurveMarketTest is Test {
         assertEq(LaunchToken(tokenAddress).balanceOf(address(rejector)), tokensOut);
         assertGt(rejectingMarket.claimableFees(address(rejector)), 0);
         assertEq(
-            address(rejectingMarket).balance, rejectingMarket.realEthReserve() + rejectingMarket.totalClaimableFees()
+            address(rejectingMarket).balance,
+            rejectingMarket.realEthReserve() + rejectingMarket.totalClaimableFees()
         );
     }
-
 
     function testFeeWithdrawalCannotReenter() public {
         ReentrantFeeRecipient reentrant = new ReentrantFeeRecipient();
