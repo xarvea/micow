@@ -69,3 +69,12 @@ Set `DEPLOYER_PRIVATE_KEY` and `PROTOCOL_FEE_RECIPIENT` through a protected loca
 4. Patch the cause, add regression coverage where applicable, and rerun targeted and full gates.
 5. Record root cause and fix in PR notes or DECISIONS.md.
 6. Merge only when required gates are green and no critical unresolved issue remains.
+
+
+## Atomic indexer persistence failure test
+
+The indexer uses a shared transaction helper for per-block persistence and reorg rollback. The PostgreSQL integration suite deliberately inserts a row that violates the trades-side constraint after writing an event and checkpoint, then verifies that the transaction leaves no partial event, checkpoint, or trade rows. Run it with:
+
+    pnpm --filter @micow/indexer test:integration
+
+This test must run only against an isolated test database, never a shared or production database.
