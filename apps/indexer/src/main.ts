@@ -155,7 +155,7 @@ async function syncOnce(): Promise<void> {
   if (safeHead < nextBlock) return;
   const proposedEnd = nextBlock + BigInt(batchSize - 1);
   const endBlock = proposedEnd < safeHead ? proposedEnd : safeHead;
-  const logs = await client.getLogs({ fromBlock: nextBlock, toBlock: endBlock, topics: [eventTopics as [Hex, ...Hex[]]] });
+  const logs = await client.getLogs({ fromBlock: nextBlock, toBlock: endBlock });
   const byBlock = new Map<string, IndexedLog[]>();
   for (const log of logs as readonly IndexedLog[]) {
     const key = String(log.blockNumber);

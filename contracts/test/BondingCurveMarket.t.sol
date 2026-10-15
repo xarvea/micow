@@ -60,7 +60,9 @@ contract BondingCurveMarketTest is Test {
 
     function testBuyRevertsWhenSlippageLimitIsImpossible() public {
         (uint256 expectedOut,,) = market.quoteBuy(0.1 ether);
-        vm.expectRevert(abi.encodeWithSelector(BondingCurveMarket.SlippageExceeded.selector, expectedOut, type(uint256).max));
+        vm.expectRevert(
+            abi.encodeWithSelector(BondingCurveMarket.SlippageExceeded.selector, expectedOut, type(uint256).max)
+        );
         vm.prank(trader);
         market.buy{value: 0.1 ether}(type(uint256).max, block.timestamp);
     }
