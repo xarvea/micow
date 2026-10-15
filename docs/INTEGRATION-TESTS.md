@@ -9,7 +9,7 @@ These tests exercise the actual PostgreSQL schema and the same indexer persisten
 1. Start the repository's PostgreSQL service:
 
    ```bash
-   docker compose up -d db
+   docker compose -f infra/compose.yaml up -d postgres
    ```
 
 2. Set a local test database URL (the Compose defaults are for local development only):
