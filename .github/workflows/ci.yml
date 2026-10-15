@@ -68,6 +68,46 @@ jobs:
       - name: Production build
         run: pnpm build
 
+  postgres-integration:
+    name: PostgreSQL idempotency, reorg, and API integration
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: micow
+          POSTGRES_PASSWORD: micow
+          POSTGRES_DB: micow
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U micow -d micow"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      TEST_DATABASE_URL: postgresql://micow:micow@localhost:5432/micow
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v5
+        with:
+          version: 10.26.1
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: 24.22.0
+          cache: pnpm
+      - name: Install workspace
+        run: pnpm install --frozen-lockfile
+      - name: Indexer PostgreSQL integration tests
+        run: pnpm --filter @micow/indexer test:integration
+      - name: API PostgreSQL integration tests
+        run: pnpm --filter @micow/api test:integration
+
   repository-hygiene:
     name: Secret scan
     runs-on: ubuntu-latest

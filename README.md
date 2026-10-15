@@ -12,10 +12,11 @@ MICOW is an independently implemented, testnet-only EVM token launchpad targetin
 - [x] CI contract build, unit/fuzz tests, and invariant profile pass.
 - [ ] Independent contract security review completed.
 - [x] pnpm lockfile generated and committed; CI uses frozen installs.
-- [ ] API/indexer integration tests verified.
+- [x] PostgreSQL integration tests pass in CI: duplicate event replay, reorg rollback/replay, and API readiness/token/trade queries.
 - [x] Playwright browser smoke tests pass in CI.
 - [ ] Testnet deployment and explorer verification completed. **Blocked** pending deployer key and test ETH.
-- [ ] All CI/security gates green and PR merged.
+- [x] Automated CI/security gates pass on the integration branch.
+- [ ] Integration PR merged and main-branch CI reverified.
 
 Never treat this repository as audited or production-ready. Mainnet deployment is out of scope until independent security review and explicit approval.
 

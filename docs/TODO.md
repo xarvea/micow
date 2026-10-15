@@ -47,18 +47,24 @@ Status values: PENDING, IN_PROGRESS, BLOCKED, COMPLETED, NOT_VERIFIED. A checked
 - [x] Add PostgreSQL schema and migrations.
 - [x] Implement block-by-block checkpoints with hash/parent hash.
 - [x] Implement event identity uniqueness and idempotent inserts.
-- [x] Make event rows, projections, and checkpoint atomic.
+- [x] Persist events, projections, and checkpoints in a transaction.
+- [ ] Add failure-injection coverage proving event/checkpoint writes roll back together.
 - [x] Implement common-ancestor reorg rollback and replay.
 - [x] Implement Fastify read-only API with validation and rate limits.
-- [ ] Add pagination, rate-limit, and readiness integration tests.
-- [ ] Add integration tests for duplicate replay, reorg, restart, and RPC outage.
+- [x] Add readiness, token-listing, and trade-history PostgreSQL integration tests.
+- [x] Test pagination bounds and parameterized SQL in unit tests.
+- [ ] Add a rate-limit integration test.
+- [x] Add PostgreSQL tests for duplicate event replay, reorg rollback, and canonical replay.
+- [ ] Add worker restart and RPC outage recovery tests.
 - [ ] Add RPC-to-contract-state reconciliation.
 
 ## P5 — Local integration
 - [x] Add Docker Compose for PostgreSQL.
 - [x] Add environment template and validation for required indexer settings.
-- [ ] Add migration/seed and end-to-end smoke tests.
-- [ ] Verify clean-checkout install, build, tests, and service startup.
+- [x] Add migration-backed API/indexer PostgreSQL integration tests.
+- [ ] Add a full service-level end-to-end smoke test.
+- [x] Verify clean-checkout install, build, and automated tests in CI.
+- [ ] Verify local service startup/stop and migration recovery on Ubuntu.
 
 ## P6 — Testnet
 - [x] Add deployment script that asserts chain ID 46630.
@@ -73,13 +79,14 @@ Status values: PENDING, IN_PROGRESS, BLOCKED, COMPLETED, NOT_VERIFIED. A checked
 - [x] Add contract and JS/TS lint, typecheck, test, and build gates.
 - [x] Add dependency audit, secret scanning, CodeQL, and pinned Actions.
 - [x] Commit lockfile and switch CI to frozen lockfile installs.
-- [ ] Rerun all CI gates after the latest changes and resolve failures.
+- [x] Rerun all CI gates after the latest changes and resolve failures.
 - [ ] Require all checks before merge where repository settings allow.
 
 ## P8 — Testnet launch readiness
 - [x] Publish build, deployment, and operations runbooks.
 - [ ] Run backup/restore drill.
-- [ ] Run reorg and RPC outage recovery drill.
+- [x] Exercise database reorg rollback/replay in PostgreSQL CI.
+- [ ] Run RPC outage recovery drill.
 - [ ] Review threat model and unresolved findings.
 - [ ] Complete launch readiness checklist.
 

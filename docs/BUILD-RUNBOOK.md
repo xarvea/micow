@@ -27,7 +27,7 @@ Only placeholders belong in .env.example. Never commit .env.
     pnpm --filter @micow/web test:e2e
     pnpm build
 
-Commit the generated pnpm lockfile. CI should use frozen lockfile installs once the lockfile is established.
+The pnpm lockfile is committed. Use frozen installs to preserve deterministic dependency resolution.
 
 ## 4. Verify Solidity
     forge --version
@@ -41,6 +41,9 @@ If a check fails, preserve the full error log, identify the first causal error, 
 ## 5. Run local services
     docker compose -f infra/compose.yaml up -d postgres
     pnpm --filter @micow/api db:migrate
+    export TEST_DATABASE_URL=postgresql://micow:micow@localhost:5432/micow
+    pnpm --filter @micow/indexer test:integration
+    pnpm --filter @micow/api test:integration
     pnpm --filter @micow/indexer dev
     pnpm --filter @micow/api dev
     pnpm --filter @micow/web dev
@@ -57,7 +60,7 @@ Check health/readiness endpoints and inspect the indexer's indexed-through block
 ## 7. Deploy and record
     forge script contracts/script/DeployTestnet.s.sol:DeployTestnet --rpc-url robinhood_testnet --broadcast
 
-Inject broadcaster credentials through a protected environment or secret manager, never into the command. Record factory address, transaction hash, block number/hash, chain ID, compiler version, optimizer settings, and explorer verification URL in the deployment manifest.
+Set `DEPLOYER_PRIVATE_KEY` and `PROTOCOL_FEE_RECIPIENT` through a protected local environment or secret manager. The script reads the private key at runtime and rejects any chain ID other than 46630; never put the key in source, command arguments, or logs. Record factory address, transaction hash, block number/hash, chain ID, compiler version, optimizer settings, and explorer verification URL in the deployment manifest.
 
 ## 8. Recovery and failure triage
 1. Capture check name, run URL, failed step, and first actionable error.
