@@ -8,7 +8,7 @@ Status values: PENDING, IN_PROGRESS, BLOCKED, COMPLETED, NOT_VERIFIED. A checked
 - [x] Define threat model and acceptance criteria.
 - [x] Establish provenance policy and clean-room rule.
 - [x] Pin Node, pnpm, Solidity compiler, and Foundry configuration.
-- [ ] Generate and commit pnpm lockfile from a real pnpm install.
+- [x] Generate and commit pnpm lockfile from a real pnpm install.
 - [x] Pin GitHub Actions to reviewed full commit SHAs.
 - [ ] Review every changed file and PR metadata.
 
@@ -70,7 +70,7 @@ Status values: PENDING, IN_PROGRESS, BLOCKED, COMPLETED, NOT_VERIFIED. A checked
 ## P7 — CI/security
 - [x] Add contract and JS/TS lint, typecheck, test, and build gates.
 - [x] Add dependency audit, secret scanning, CodeQL, and pinned Actions.
-- [ ] Commit lockfile and switch CI to frozen lockfile installs.
+- [x] Commit lockfile and switch CI to frozen lockfile installs.
 - [ ] Rerun all CI gates after the latest changes and resolve failures.
 - [ ] Require all checks before merge where repository settings allow.
 

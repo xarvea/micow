@@ -10,7 +10,8 @@ MICOW is an independently implemented, testnet-only EVM token launchpad targetin
 - [x] Next.js launchpad UI with injected wallet connection, chain guard, token creation, buy/sell quotes, and slippage-protected transactions added.
 - [x] Read-only Fastify API and PostgreSQL-backed reorg-aware indexer implementation added.
 - [ ] Contract compilation, fuzz/invariant tests, and security review passed.
-- [ ] API/indexer integration tests, browser tests, and committed lockfile verified.
+- [x] pnpm lockfile generated and committed by the CI bootstrap job.
+- [ ] API/indexer integration tests and browser tests verified.
 - [ ] Testnet deployment and explorer verification completed.
 - [ ] All CI/security gates green and PR merged.
 
