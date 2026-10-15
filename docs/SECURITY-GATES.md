@@ -21,3 +21,12 @@
 
 ## Failure policy
 A failed required check blocks merge. Diagnose the first actionable error, patch the root cause, add regression coverage where applicable, and rerun affected gates. Document an unavailable check as blocked rather than green.
+
+
+## Deployment controls
+
+- The automatic testnet preflight only reads the public RPC and runs a Foundry simulation; it never uses `--broadcast`.
+- The only workflow that broadcasts is `.github/workflows/deploy-testnet.yml`, which requires an explicit boolean input and the `robinhood-testnet` GitHub environment.
+- Configure required reviewers for that environment before storing deployer secrets.
+- The workflow must never receive a mainnet private key. Testnet deployment credentials are not present in the repository and were not used during implementation.
+- The Foundry toolchain action is pinned to a full commit SHA; optional wallet SDKs for unused connectors are externalized rather than installed just to silence bundler warnings.

@@ -10,10 +10,12 @@ const paginationSchema = z.object({
 });
 const addressSchema = z.string().regex(/^0x[a-fA-F0-9]{40}$/);
 
-export async function buildApp(pool: Pool): Promise<FastifyInstance> {
-  const app = Fastify({ logger: true, bodyLimit: 16_384, trustProxy: false });
+export type BuildAppOptions = { logger?: boolean; rateLimitMax?: number };
+
+export async function buildApp(pool: Pool, options: BuildAppOptions = {}): Promise<FastifyInstance> {
+  const app = Fastify({ logger: options.logger ?? true, bodyLimit: 16_384, trustProxy: false });
   await app.register(cors, { origin: process.env.WEB_ORIGIN ?? "http://localhost:3000" });
-  await app.register(rateLimit, { max: 120, timeWindow: "1 minute" });
+  await app.register(rateLimit, { max: options.rateLimitMax ?? 120, timeWindow: "1 minute" });
 
   app.get("/health", async () => ({ status: "ok", service: "micow-api" }));
 
@@ -54,7 +56,7 @@ export async function buildApp(pool: Pool): Promise<FastifyInstance> {
         );
         if (token.rowCount === 0) return reply.code(404).send({ error: "token_not_found" });
         const trades = await pool.query(
-          "SELECT tx_hash, side, trader_address, amount_in, amount_out, protocol_fee, creator_fee, block_number FROM trades WHERE chain_id = $1 AND lower(token_address) = lower($2) ORDER BY block_number DESC, log_index DESC LIMIT $3 OFFSET $4",
+          "SELECT tx_hash, side, trader_address, amount_in, amount_out, protocol_fee, creator_fee, block_number FROM trades WHERE chain_id = $1 AND lower(token_address) = lower($2) ORDER BY block_number DESC, log_index DESC, tx_hash DESC LIMIT $3 OFFSET $4",
           [46630, address.data, page.data.limit, page.data.offset],
         );
         return { chainId: 46630, tokenAddress: address.data, ...page.data, items: trades.rows };

@@ -3,6 +3,7 @@ import { Pool, type PoolClient } from "pg";
 import { createPublicClient, decodeEventLog, defineChain, http, parseAbi, toEventSelector, type Address, type Hex } from "viem";
 import { eventIdentity, findCommonAncestor, type StoredBlock } from "./reorg.js";
 import { insertIndexedEvent, rollbackAfter } from "./store.js";
+import { withRpcRetry } from "./retry.js";
 
 dotenv.config({ path: process.env.DOTENV_CONFIG_PATH ?? "../../.env" });
 type IndexedLog = {
@@ -37,28 +38,39 @@ const eventTopics = eventAbi.map((event) => toEventSelector(event));
 const tokenCreatedTopic = eventTopics[0]?.toLowerCase();
 const buyTopic = eventTopics[1]?.toLowerCase();
 const sellTopic = eventTopics[2]?.toLowerCase();
-const client = createPublicClient({ chain, transport: http(rpcUrl), pollingInterval: 4_000 });
+const client = createPublicClient({ chain, transport: http(rpcUrl, { timeout: 10_000, retryCount: 0 }), pollingInterval: 4_000 });
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL ?? "postgresql://micow:micow@localhost:5432/micow",
   max: 5,
   connectionTimeoutMillis: 3_000,
 });
 
+function retryRpc<T>(operationName: string, operation: () => Promise<T>): Promise<T> {
+  return withRpcRetry(operation, {
+    attempts: 3,
+    initialDelayMs: 500,
+    maxDelayMs: 4_000,
+    onRetry: (error, failedAttempt) => {
+      console.warn("RPC operation " + operationName + " failed; retry " + failedAttempt.toString(), error);
+    },
+  });
+}
+
 async function repairReorg(): Promise<void> {
   const last = await pool.query("SELECT block_number::text, block_hash FROM indexed_blocks WHERE chain_id = $1 ORDER BY block_number DESC LIMIT 1", [chainId]);
   if (last.rowCount === 0) return;
   const latestNumber = BigInt(last.rows[0].block_number);
-  const remote = await client.getBlock({ blockNumber: latestNumber });
+  const remote = await retryRpc("getBlock during reorg check", () => client.getBlock({ blockNumber: latestNumber }));
   if (remote.hash.toLowerCase() === String(last.rows[0].block_hash).toLowerCase()) return;
   const storedResult = await pool.query("SELECT block_number::text, block_hash FROM indexed_blocks WHERE chain_id = $1 ORDER BY block_number DESC LIMIT 10000", [chainId]);
   const stored: StoredBlock[] = storedResult.rows.map((row: { block_number: string; block_hash: string }) => ({
     number: BigInt(row.block_number),
     hash: String(row.block_hash),
   }));
-  const ancestor = await findCommonAncestor(stored, async (number) => {
-    try { return (await client.getBlock({ blockNumber: number })).hash; }
-    catch { return null; }
-  });
+  const ancestor = await findCommonAncestor(
+    stored,
+    async (number) => (await retryRpc("getBlock while finding common ancestor", () => client.getBlock({ blockNumber: number }))).hash,
+  );
   const rollbackPoint = ancestor ?? BigInt(startBlock) - 1n;
   await rollbackAfter(pool, chainId, rollbackPoint);
   console.warn("Reorg rollback completed at block " + rollbackPoint.toString());
@@ -140,19 +152,19 @@ async function syncOnce(): Promise<void> {
   const nextBlock = last.rows[0]?.block_number === null || last.rows[0]?.block_number === undefined
     ? BigInt(startBlock)
     : BigInt(last.rows[0].block_number) + 1n;
-  const head = await client.getBlockNumber();
+  const head = await retryRpc("getBlockNumber", () => client.getBlockNumber());
   const safeHead = head - BigInt(confirmations);
   if (safeHead < nextBlock) return;
   const proposedEnd = nextBlock + BigInt(batchSize - 1);
   const endBlock = proposedEnd < safeHead ? proposedEnd : safeHead;
-  const logs = await client.getLogs({ fromBlock: nextBlock, toBlock: endBlock });
+  const logs = await retryRpc("getLogs", () => client.getLogs({ fromBlock: nextBlock, toBlock: endBlock }));
   const byBlock = new Map<string, IndexedLog[]>();
   for (const log of logs as readonly IndexedLog[]) {
     const key = String(log.blockNumber);
     byBlock.set(key, [...(byBlock.get(key) ?? []), log]);
   }
   for (let number = nextBlock; number <= endBlock; number += 1n) {
-    const block = await client.getBlock({ blockNumber: number });
+    const block = await retryRpc("getBlock while indexing", () => client.getBlock({ blockNumber: number }));
     const blockLogs = (byBlock.get(number.toString()) ?? []).slice().sort((a, b) => Number(a.logIndex) - Number(b.logIndex));
     await persistBlock(number, block.hash, block.parentHash, blockLogs);
   }
@@ -168,7 +180,16 @@ async function main(): Promise<void> {
   if (!Number.isSafeInteger(startBlock) || startBlock < 0) throw new Error("INDEXER_START_BLOCK must be set to the factory deployment block");
   if (!Number.isSafeInteger(batchSize) || batchSize < 1 || batchSize > 500) throw new Error("INDEXER_BATCH_SIZE must be between 1 and 500");
   if (!Number.isSafeInteger(confirmations) || confirmations < 0 || confirmations > 100) throw new Error("INDEXER_CONFIRMATIONS must be between 0 and 100");
-  const actualChainId = await client.getChainId();
+  let actualChainId: number | undefined;
+  while (running && actualChainId === undefined) {
+    try {
+      actualChainId = await retryRpc("getChainId", () => client.getChainId());
+    } catch (error) {
+      console.error("RPC unavailable during indexer startup; retrying in 4 seconds.", error);
+      if (running) await new Promise((resolve) => setTimeout(resolve, 4_000));
+    }
+  }
+  if (!running) return;
   if (actualChainId !== chainId) throw new Error("Wrong RPC chain id: expected 46630, got " + actualChainId);
   console.info("MICOW indexer started on chain " + chainId + " with factory " + factoryAddress);
   while (running) {

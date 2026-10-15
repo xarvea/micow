@@ -11,12 +11,13 @@ MICOW is an independently implemented, testnet-only EVM token launchpad targetin
 - [x] Read-only Fastify API and PostgreSQL-backed reorg-aware indexer implementation added.
 - [x] CI contract build, unit/fuzz tests, and invariant profile pass.
 - [ ] Independent contract security review completed.
+- [ ] Verify the Next.js build has no optional wallet SDK resolution warnings after connector externals hardening.
 - [x] pnpm lockfile generated and committed; CI uses frozen installs.
 - [x] PostgreSQL integration tests pass in CI: duplicate event replay, reorg rollback/replay, and API readiness/token/trade queries.
 - [x] Playwright browser smoke tests pass in CI.
-- [ ] Testnet deployment and explorer verification completed. **Blocked** pending deployer key and test ETH.
-- [x] Automated CI/security gates pass on the integration branch.
-- [ ] Integration PR merged and main-branch CI reverified.
+- [ ] Testnet deployment and explorer verification completed. **Blocked** pending protected deployer key and test ETH.
+- [x] PostgreSQL integration PR merged into main.
+- [ ] Verify post-merge main CI and testnet preflight.
 
 Never treat this repository as audited or production-ready. Mainnet deployment is out of scope until independent security review and explicit approval.
 

@@ -60,5 +60,36 @@ describe("MICOW API", () => {
     expect(calls[0]?.sql).toContain("$1");
     expect(calls[0]?.sql).toContain("$2");
     expect(calls[0]?.sql).toContain("$3");
+    expect(calls[0]?.sql).toContain("ORDER BY created_block DESC, token_address ASC");
   });
+  it("uses a stable tie-breaker for trades in the same block and log index", async () => {
+    const calls: Array<{ sql: string; values?: unknown[] }> = [];
+    const pool = {
+      query: async (sql: string, values?: unknown[]) => {
+        calls.push({ sql, values });
+        return calls.length === 1
+          ? { rows: [{ token_address: "0x0000000000000000000000000000000000000001" }], rowCount: 1 }
+          : { rows: [], rowCount: 0 };
+      },
+    } as unknown as Pool;
+    app = await buildApp(pool, { logger: false });
+
+    const response = await app.inject({
+      method: "GET",
+      url: "/v1/tokens/0x0000000000000000000000000000000000000001/trades",
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(calls[1]?.sql).toContain("ORDER BY block_number DESC, log_index DESC, tx_hash DESC");
+  });
+
+  it("returns 429 after the configured rate limit is exceeded", async () => {
+    const pool = { query: async () => ({ rows: [], rowCount: 0 }) } as unknown as Pool;
+    app = await buildApp(pool, { logger: false, rateLimitMax: 2 });
+
+    expect((await app.inject({ method: "GET", url: "/health" })).statusCode).toBe(200);
+    expect((await app.inject({ method: "GET", url: "/health" })).statusCode).toBe(200);
+    expect((await app.inject({ method: "GET", url: "/health" })).statusCode).toBe(429);
+  });
+
 });

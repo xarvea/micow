@@ -1,0 +1,86 @@
+name: Deploy MICOW to Robinhood Chain Testnet
+
+on:
+  workflow_dispatch:
+    inputs:
+      broadcast:
+        description: "Broadcast the deployment transaction (requires the protected robinhood-testnet environment)"
+        required: true
+        type: boolean
+        default: false
+
+permissions: {}
+
+jobs:
+  preflight:
+    name: Validate network and simulate deployment
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    env:
+      RH_TESTNET_RPC_URL: ${{ vars.RH_TESTNET_RPC_URL || 'https://rpc.testnet.chain.robinhood.com' }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+          submodules: recursive
+      - uses: foundry-rs/foundry-toolchain@908c540300062bd5a7e473851cdb4282204cee09 # v1
+        with:
+          version: stable
+      - name: Verify target chain
+        run: |
+          actual="$(cast chain-id --rpc-url "$RH_TESTNET_RPC_URL")"
+          test "$actual" = "46630"
+          printf 'Verified Robinhood Chain Testnet ID: %s\n' "$actual"
+      - name: Simulate without broadcasting
+        shell: bash
+        run: |
+          set -euo pipefail
+          DEPLOYER_PRIVATE_KEY="0x$(openssl rand -hex 32)"
+          echo "::add-mask::$DEPLOYER_PRIVATE_KEY"
+          export DEPLOYER_PRIVATE_KEY
+          export PROTOCOL_FEE_RECIPIENT=0x0000000000000000000000000000000000000001
+          forge build --sizes
+          forge script contracts/script/DeployTestnet.s.sol:DeployTestnet --rpc-url "$RH_TESTNET_RPC_URL" -vvv
+
+  deploy:
+    name: Broadcast testnet deployment
+    if: ${{ inputs.broadcast }}
+    needs: preflight
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: robinhood-testnet
+    permissions:
+      contents: read
+    env:
+      RH_TESTNET_RPC_URL: ${{ vars.RH_TESTNET_RPC_URL || 'https://rpc.testnet.chain.robinhood.com' }}
+      DEPLOYER_PRIVATE_KEY: ${{ secrets.DEPLOYER_PRIVATE_KEY }}
+      PROTOCOL_FEE_RECIPIENT: ${{ vars.PROTOCOL_FEE_RECIPIENT }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+          submodules: recursive
+      - uses: foundry-rs/foundry-toolchain@908c540300062bd5a7e473851cdb4282204cee09 # v1
+        with:
+          version: stable
+      - name: Validate protected deployment inputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$DEPLOYER_PRIVATE_KEY"
+          test -n "$PROTOCOL_FEE_RECIPIENT"
+          actual="$(cast chain-id --rpc-url "$RH_TESTNET_RPC_URL")"
+          test "$actual" = "46630"
+      - name: Build and broadcast
+        run: |
+          forge build --sizes
+          forge script contracts/script/DeployTestnet.s.sol:DeployTestnet --rpc-url "$RH_TESTNET_RPC_URL" --broadcast --slow -vvv
+      - name: Preserve deployment record
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: micow-robinhood-testnet-deployment
+          path: broadcast/DeployTestnet.s.sol/46630/run-latest.json
+          if-no-files-found: error
+          retention-days: 90
