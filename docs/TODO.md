@@ -51,11 +51,13 @@ Status values: PENDING, IN_PROGRESS, BLOCKED, COMPLETED, NOT_VERIFIED. A checked
 - [ ] Add failure-injection coverage proving event/checkpoint writes roll back together.
 - [x] Implement common-ancestor reorg rollback and replay.
 - [x] Implement Fastify read-only API with validation and rate limits.
+- [x] Add deterministic trade ordering by block, log index, and transaction hash.
 - [x] Add readiness, token-listing, and trade-history PostgreSQL integration tests.
 - [x] Test pagination bounds and parameterized SQL in unit tests.
-- [ ] Add a rate-limit integration test.
+- [x] Add a rate-limit behavior test using a low configured API limit.
 - [x] Add PostgreSQL tests for duplicate event replay, reorg rollback, and canonical replay.
-- [ ] Add worker restart and RPC outage recovery tests.
+- [x] Add bounded RPC retry with exponential backoff and unit tests; RPC errors cannot be mistaken for a missing reorg ancestor.
+- [ ] Add worker restart/RPC outage end-to-end tests.
 - [ ] Add RPC-to-contract-state reconciliation.
 
 ## P5 — Local integration
@@ -68,7 +70,9 @@ Status values: PENDING, IN_PROGRESS, BLOCKED, COMPLETED, NOT_VERIFIED. A checked
 
 ## P6 — Testnet
 - [x] Add deployment script that asserts chain ID 46630.
-- [ ] Dry-run deployment and inspect bytecode size/gas.
+- [x] Add manual deployment workflow with broadcast disabled by default and protected environment.
+- [x] Add main-branch testnet RPC and non-broadcast deployment preflight job (execution pending after merge).
+- [ ] Run the main-branch testnet RPC/deployment simulation and inspect gas output.
 - [ ] Deploy factory only after contract gates pass. **BLOCKED:** no deployer key or test ETH is available in the execution environment.
 - [ ] Record chain ID, addresses, tx hashes, block numbers, compiler/settings.
 - [ ] Verify contracts on explorer where supported.
@@ -78,6 +82,8 @@ Status values: PENDING, IN_PROGRESS, BLOCKED, COMPLETED, NOT_VERIFIED. A checked
 ## P7 — CI/security
 - [x] Add contract and JS/TS lint, typecheck, test, and build gates.
 - [x] Add dependency audit, secret scanning, CodeQL, and pinned Actions.
+- [x] Pin Foundry toolchain action to a reviewed full commit SHA.
+- [x] Externalize unused optional wallet SDK modules to remove non-fatal Next.js build warnings (CI verification pending).
 - [x] Commit lockfile and switch CI to frozen lockfile installs.
 - [x] Rerun all CI gates after the latest changes and resolve failures.
 - [ ] Require all checks before merge where repository settings allow.
@@ -86,7 +92,8 @@ Status values: PENDING, IN_PROGRESS, BLOCKED, COMPLETED, NOT_VERIFIED. A checked
 - [x] Publish build, deployment, and operations runbooks.
 - [ ] Run backup/restore drill.
 - [x] Exercise database reorg rollback/replay in PostgreSQL CI.
-- [ ] Run RPC outage recovery drill.
+- [x] Test bounded RPC retry and backoff with unit tests.
+- [ ] Run RPC outage recovery drill against an unavailable/recovering provider.
 - [ ] Review threat model and unresolved findings.
 - [ ] Complete launch readiness checklist.
 
