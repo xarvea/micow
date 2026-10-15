@@ -5,12 +5,12 @@ MICOW is an independently implemented, testnet-only EVM token launchpad targetin
 ## Current delivery status
 
 - [x] Clean-room Git history established.
-- [x] Product scope, architecture, threat model, roadmap, runbook, and acceptance gates documented.
-- [x] Initial fixed-supply token, factory, and bonding-curve implementation added.
-- [x] Next.js wallet-connected testnet landing page scaffold added.
-- [x] Read-only API and reorg-aware indexer implementation started.
+- [x] Product scope, architecture, threat model, roadmap, build/deployment runbooks, operations, and acceptance gates documented.
+- [x] Fixed-supply ERC-20, factory, and bonding-curve implementation with fee liabilities and safety checks added.
+- [x] Next.js launchpad UI with injected wallet connection, chain guard, token creation, buy/sell quotes, and slippage-protected transactions added.
+- [x] Read-only Fastify API and PostgreSQL-backed reorg-aware indexer implementation added.
 - [ ] Contract compilation, fuzz/invariant tests, and security review passed.
-- [ ] Browser, API, indexer integration tests and dependency lockfile verified.
+- [ ] API/indexer integration tests, browser tests, and committed lockfile verified.
 - [ ] Testnet deployment and explorer verification completed.
 - [ ] All CI/security gates green and PR merged.
 
@@ -23,7 +23,7 @@ Never treat this repository as audited or production-ready. Mainnet deployment i
 - wagmi + viem
 - Fastify read-only API
 - TypeScript event indexer + PostgreSQL
-- pnpm workspace + Turborepo
+- pnpm workspace + Turborepo + Biome
 
 ## Network
 

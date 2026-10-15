@@ -19,7 +19,7 @@ Status values: PENDING, IN_PROGRESS, BLOCKED, COMPLETED, NOT_VERIFIED. A checked
 - [x] Implement immutable bounded fees and pull-based fee withdrawal.
 - [x] Add reentrancy protection and event emissions.
 - [ ] Confirm compiler build and bytecode sizes in CI.
-- [ ] Add malicious fee-recipient and reentrant-recipient tests.
+- [ ] Add malicious fee-recipient reentrancy tests.
 - [ ] Add quote/execution equivalence and rounding-boundary tests.
 - [ ] Review curve economics, inventory limits, and MEV exposure.
 
@@ -32,13 +32,14 @@ Status values: PENDING, IN_PROGRESS, BLOCKED, COMPLETED, NOT_VERIFIED. A checked
 - [ ] Add gas snapshots and inspect deployment bytecode size.
 
 ## P3 — Web
-- [x] Build initial Next.js App Router scaffold.
+- [x] Build Next.js App Router application.
 - [x] Implement wallet connect/disconnect and wrong-chain guard.
-- [ ] Implement create-token flow with validated fields.
-- [ ] Implement read-only token/market discovery.
-- [ ] Implement buy/sell preview, min-output, and deadline controls.
-- [ ] Implement receipt tracking and loading/error/empty states.
+- [x] Implement token creation with client-side validation.
+- [x] Implement indexed token discovery.
+- [x] Implement buy/sell quotes, fixed 1% min-output protection, and transaction deadlines.
+- [x] Implement wallet write, approval, receipt, and error states.
 - [ ] Add browser tests and responsive/accessibility checks.
+- [ ] Add price-impact estimate and explicit min-received display.
 
 ## P4 — Indexer and API
 - [x] Add PostgreSQL schema and migrations.
@@ -67,10 +68,9 @@ Status values: PENDING, IN_PROGRESS, BLOCKED, COMPLETED, NOT_VERIFIED. A checked
 - [ ] Record limitations; no mainnet deployment.
 
 ## P7 — CI/security
-- [x] Replace dependency-review action with a dependency audit gate that does not require GitHub Dependency Graph.
-- [x] Add TypeScript source for CodeQL.
-- [x] Add web/API/indexer lint, typecheck, tests, and build jobs.
-- [x] Add dependency audit, secret scanning, and pinned Actions.
+- [x] Add contract and JS/TS lint, typecheck, test, and build gates.
+- [x] Add dependency audit, secret scanning, CodeQL, and pinned Actions.
+- [ ] Commit lockfile and switch CI to frozen lockfile installs.
 - [ ] Rerun all CI gates after the latest changes and resolve failures.
 - [ ] Require all checks before merge where repository settings allow.
 
