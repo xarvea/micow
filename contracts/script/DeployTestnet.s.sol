@@ -8,8 +8,12 @@ import {LaunchpadFactory} from "../src/LaunchpadFactory.sol";
 contract DeployTestnet is Script {
     uint256 internal constant ROBINHOOD_TESTNET_CHAIN_ID = 46630;
 
+    function assertTestnetChain(uint256 chainId) public pure {
+        require(chainId == ROBINHOOD_TESTNET_CHAIN_ID, "TESTNET_ONLY");
+    }
+
     function run() external returns (LaunchpadFactory factory) {
-        require(block.chainid == ROBINHOOD_TESTNET_CHAIN_ID, "TESTNET_ONLY");
+        assertTestnetChain(block.chainid);
         address protocolFeeRecipient = vm.envAddress("PROTOCOL_FEE_RECIPIENT");
         require(protocolFeeRecipient != address(0), "ZERO_FEE_RECIPIENT");
 

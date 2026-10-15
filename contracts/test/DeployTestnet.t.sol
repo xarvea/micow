@@ -6,8 +6,11 @@ import {DeployTestnet} from "../script/DeployTestnet.s.sol";
 
 contract DeployTestnetTest is Test {
     function testRejectsNonTestnetChainBeforeReadingSecrets() public {
-        vm.chainId(1);
         vm.expectRevert(abi.encodeWithSignature("Error(string)", "TESTNET_ONLY"));
-        new DeployTestnet().run();
+        new DeployTestnet().assertTestnetChain(1);
+    }
+
+    function testAcceptsRobinhoodTestnetChain() public {
+        new DeployTestnet().assertTestnetChain(46630);
     }
 }
