@@ -1,16 +1,14 @@
 # Threat Model
 
 ## Assets
-
 - User ETH and launch-token balances
-- Market ETH reserves and token inventory
+- Market ETH reserves, token inventory, and accrued fee liabilities
 - Token supply and fee accounting
 - Deployer credentials and RPC provider credentials
 - Database integrity and indexer checkpoints
 - User wallet privacy and transaction intent
 
 ## Adversaries and failure modes
-
 - Malicious token creator or trader
 - Reentrant receiver/contract
 - Slippage and deadline manipulation
@@ -21,12 +19,13 @@
 - Malicious metadata URI or malformed API inputs
 - Secret leakage in Git history, build logs, or client bundles
 - Compromised dependency or GitHub Actions supply chain
+- Fee recipient rejecting ETH and causing trade denial of service
 
 ## Required controls
-
 - Checks-effects-interactions and reentrancy guard on ETH-moving functions
 - Explicit min-output/deadline parameters and conservative rounding
 - Immutable bounded fees; total fee <= 500 bps
+- Pull-based fee withdrawals so recipient receive() failures do not block trading
 - Fixed supply, no upgrade/admin mint, no privileged reserve drain
 - Fuzz/invariant tests for supply, reserve solvency, fee bounds, and buy/sell accounting
 - Strict chain ID and contract-address checks before wallet writes

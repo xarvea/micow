@@ -3,19 +3,18 @@
   "private": true,
   "version": "0.1.0",
   "packageManager": "pnpm@10.26.1",
-  "engines": {
-    "node": "20.20.x"
-  },
+  "engines": { "node": "24.22.x" },
   "scripts": {
-    "lint": "pnpm -r --if-present lint",
-    "typecheck": "pnpm -r --if-present typecheck",
-    "test": "pnpm -r --if-present test",
-    "build": "pnpm -r --if-present build",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "build": "turbo run build",
+    "check": "pnpm lint && pnpm typecheck && pnpm test && pnpm build",
     "test:contracts": "forge test",
     "check:contracts": "forge fmt --check && forge build --sizes && forge test"
   },
   "devDependencies": {
-    "turbo": "^2.5.6",
-    "typescript": "~5.9.3"
+    "turbo": "2.5.6",
+    "typescript": "5.9.3"
   }
 }

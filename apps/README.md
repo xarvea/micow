@@ -1,7 +1,7 @@
 # Applications
 
-- `web/`: Next.js App Router + strict TypeScript + wagmi/viem.
-- `api/`: Fastify read-only API.
-- `indexer/`: TypeScript event indexer with PostgreSQL persistence, idempotency, reorg recovery, and reconciliation.
+- web/: Next.js App Router, strict TypeScript, wagmi/viem wallet integration. Current UI is a testnet landing page and wallet/chain guard; transaction flows remain pending.
+- api/: Fastify read-only API with validation, rate limiting, and PostgreSQL read model.
+- indexer/: TypeScript log ingestion with block-hash checkpoints, idempotent event inserts, reorg rollback, and replay.
 
-Each application will have an independent package manifest and test commands in its implementation phase. API and indexer must never custody or sign user transactions.
+Applications never custody or sign user transactions. API is read-only. Indexer credentials are limited to its database and RPC provider.

@@ -8,22 +8,19 @@ import {BondingCurveMarket} from "../src/BondingCurveMarket.sol";
 
 contract LaunchpadFactoryTest is Test {
     LaunchpadFactory internal factory;
-    address internal protocolRecipient;
+    address internal protocolFeeRecipient;
     address internal creator;
 
     function setUp() public {
-        protocolRecipient = makeAddr("protocol");
+        protocolFeeRecipient = makeAddr("protocol");
         creator = makeAddr("creator");
-        factory = new LaunchpadFactory(protocolRecipient);
+        factory = new LaunchpadFactory(protocolFeeRecipient);
     }
 
     function testCreateTokenHasFixedSupplyAndDedicatedMarket() public {
         vm.prank(creator);
-        (address tokenAddress, address marketAddress) = factory.createToken(
-            "Micow Test",
-            "MCWT",
-            "ipfs://example-metadata"
-        );
+        (address tokenAddress, address marketAddress) =
+            factory.createToken("Micow Test", "MCWT", "ipfs://example-metadata");
 
         LaunchToken token = LaunchToken(tokenAddress);
         BondingCurveMarket market = BondingCurveMarket(payable(marketAddress));
@@ -34,7 +31,7 @@ contract LaunchpadFactoryTest is Test {
         assertEq(factory.marketForToken(tokenAddress), marketAddress);
         assertEq(address(market.token()), tokenAddress);
         assertEq(market.creator(), creator);
-        assertEq(market.protocolFeeRecipient(), protocolRecipient);
+        assertEq(market.protocolFeeRecipient(), protocolFeeRecipient);
     }
 
     function testRejectZeroProtocolFeeRecipient() public {

@@ -1,8 +1,6 @@
 # MICOW Launchpad — Product Specification
 
-**Status:** Baseline specification v0.1  
-**Environment:** Robinhood Chain Testnet only  
-**Out of scope:** Mainnet deployment, custodial wallets, leverage, promises of returns, fake volume, wash trading, undisclosed paid promotion, and token price guarantees.
+Status: baseline specification v0.2. Environment: Robinhood Chain Testnet only. Out of scope: mainnet deployment, custodial wallets, leverage, promises of returns, fake volume, wash trading, undisclosed paid promotion, and token price guarantees.
 
 ## 1. Product objective
 
@@ -19,33 +17,34 @@ MICOW is an independent implementation. It must not copy third-party code withou
 5. Sell tokens with an explicit minimum ETH output and transaction deadline.
 6. Inspect token, curve, fee, and transaction information using on-chain data and indexed events.
 
-The initial MVP is non-custodial. The API is read-only; signing and transaction submission happen in the user's wallet.
+The MVP is non-custodial. The API is read-only; signing and transaction submission happen in the user's wallet.
 
 ## 3. Contract requirements
 
-- Each token has a fixed total supply minted once at deployment; no post-deployment mint, pause, blacklist, or upgrade path.
+- Each token has fixed total supply minted once at deployment; no post-deployment mint, pause, blacklist, or upgrade path.
 - Factory creates tokens and their associated market atomically, or reverts entirely.
-- Market holds the curve inventory and accounts for native ETH reserves.
+- Market holds the curve inventory and accounts for native ETH reserves separately from virtual reserves and fee liabilities.
 - Buy and sell use integer-only arithmetic and explicit slippage bounds.
 - User transactions include a deadline; expired transactions revert.
-- Reentrancy protection covers all state-changing external entry points that move ETH or tokens.
-- Protocol and creator fee rates are bounded at deployment and immutable thereafter. Combined fee must never exceed 500 basis points (5%); the intended initial defaults are 100 bps protocol + 100 bps creator, subject to tests and implementation review.
-- Fee recipients are non-zero, independently represented, and cannot be changed after deployment in MVP.
+- Reentrancy protection covers state-changing external entry points that move ETH or tokens.
+- Protocol and creator fee rates are bounded at deployment and immutable thereafter. Combined fee must never exceed 500 basis points (5%); initial defaults are 100 bps protocol + 100 bps creator.
+- Fee recipients are non-zero and immutable in the MVP.
+- Fees are accounted as pull-based liabilities; trading must not depend on fee recipients accepting ETH during a trade.
 - No owner-only reserve withdrawal, arbitrary token recovery, or privileged user balance mutation.
 - Events are emitted for token creation, buys, sells, and fee accounting.
 - All arithmetic, inventory, reserve, fee, and supply invariants are tested.
 
 ### Curve model
 
-Use a constant-product pricing model with explicitly documented virtual reserves. The market must hold enough real token inventory to satisfy every sale. Virtual reserves affect pricing only; they are not assets and must never be presented as withdrawable balances. Define buy/sell rounding directions conservatively and prove that fees and rounding cannot create negative reserves or unbacked payouts.
+Use a constant-product pricing model with explicitly documented virtual reserves. The market must hold enough real token inventory to satisfy every sale. Virtual reserves affect pricing only; they are not assets and must never be presented as withdrawable balances. Define buy/sell rounding conservatively and prove fees and rounding cannot create negative reserves or unbacked payouts.
 
-Graduation to an AMM is deferred. It cannot be enabled until target-network router/factory addresses, ABI, bytecode, liquidity custody, and failure/recovery behaviour are independently verified.
+Graduation to an AMM is deferred until target-network router/factory addresses, ABI, bytecode, liquidity custody, and failure/recovery behaviour are independently verified.
 
 ## 4. Web application
 
 - Next.js App Router + strict TypeScript.
 - wagmi + viem for wallet connection, chain checks, reads, writes, receipts, and typed contract ABIs.
-- Display the active chain and reject writes on an unsupported chain.
+- Display active chain and reject writes on unsupported chain.
 - Show expected output, minimum output, price impact, fees, and pending/confirmed/failed transaction states.
 - Never request or store seed phrases or private keys.
 - Validate user input on client and enforce all financial invariants in contracts.
@@ -68,7 +67,7 @@ Graduation to an AMM is deferred. It cannot be enabled until target-network rout
 - Native asset: ETH
 - Public RPC: https://rpc.testnet.chain.robinhood.com
 - Explorer: https://explorer.testnet.chain.robinhood.com
-- Public RPC is rate-limited and is not a production reliability guarantee.
+- Public RPC is rate-limited and not a production reliability guarantee.
 
 ## 7. Delivery gates
 

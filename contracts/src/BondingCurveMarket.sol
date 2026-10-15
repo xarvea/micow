@@ -24,6 +24,8 @@ contract BondingCurveMarket is ReentrancyGuard {
     uint16 public immutable creatorFeeBps;
     uint256 public realEthReserve;
     uint256 public realTokenReserve;
+    uint256 public totalClaimableFees;
+    mapping(address recipient => uint256 amount) public claimableFees;
 
     error ZeroAddress();
     error InvalidAmount();
@@ -32,37 +34,21 @@ contract BondingCurveMarket is ReentrancyGuard {
     error InsufficientLiquidity();
     error DirectETHNotAccepted();
     error InvalidFeeConfiguration();
+    error NoFeesToWithdraw();
+    error FeeWithdrawalFailed();
+    error ETHTransferFailed();
 
-    event Buy(
-        address indexed buyer,
-        uint256 ethIn,
-        uint256 tokensOut,
-        uint256 protocolFee,
-        uint256 creatorFee
-    );
-    event Sell(
-        address indexed seller,
-        uint256 tokensIn,
-        uint256 ethOut,
-        uint256 protocolFee,
-        uint256 creatorFee
-    );
+    event Buy(address indexed buyer, uint256 ethIn, uint256 tokensOut, uint256 protocolFee, uint256 creatorFee);
+    event Sell(address indexed seller, uint256 tokensIn, uint256 ethOut, uint256 protocolFee, uint256 creatorFee);
+    event FeesAccrued(address indexed recipient, uint256 amount);
+    event FeesWithdrawn(address indexed recipient, uint256 amount);
 
-    constructor(
-        address token_,
-        address creator_,
-        address protocolFeeRecipient_,
-        uint256 initialTokenReserve_
-    ) {
-        if (
-            token_ == address(0) ||
-            creator_ == address(0) ||
-            protocolFeeRecipient_ == address(0)
-        ) revert ZeroAddress();
-        if (initialTokenReserve_ == 0) revert InvalidAmount();
-        if (PROTOCOL_FEE_BPS + CREATOR_FEE_BPS > MAX_COMBINED_FEE_BPS) {
-            revert InvalidFeeConfiguration();
+    constructor(address token_, address creator_, address protocolFeeRecipient_, uint256 initialTokenReserve_) {
+        if (token_ == address(0) || creator_ == address(0) || protocolFeeRecipient_ == address(0)) {
+            revert ZeroAddress();
         }
+        if (initialTokenReserve_ == 0) revert InvalidAmount();
+        if (PROTOCOL_FEE_BPS + CREATOR_FEE_BPS > MAX_COMBINED_FEE_BPS) revert InvalidFeeConfiguration();
 
         token = IERC20(token_);
         creator = creator_;
@@ -76,74 +62,54 @@ contract BondingCurveMarket is ReentrancyGuard {
         revert DirectETHNotAccepted();
     }
 
-    /// @notice Quote buy output for a gross ETH input, including fees.
-    function quoteBuy(
-        uint256 grossEthIn
-    ) public view returns (uint256 tokensOut, uint256 protocolFee, uint256 creatorFee) {
+    function quoteBuy(uint256 grossEthIn)
+        public
+        view
+        returns (uint256 tokensOut, uint256 protocolFee, uint256 creatorFee)
+    {
         if (grossEthIn == 0) revert InvalidAmount();
         (protocolFee, creatorFee) = _fees(grossEthIn);
         uint256 netEthIn = grossEthIn - protocolFee - creatorFee;
         uint256 ethTotal = realEthReserve + VIRTUAL_ETH_RESERVE;
         uint256 tokenTotal = realTokenReserve + VIRTUAL_TOKEN_RESERVE;
         uint256 newEthTotal = ethTotal + netEthIn;
-        // Round the remaining token reserve up, never overpaying token output.
-        uint256 newTokenTotal = Math.mulDiv(
-            ethTotal,
-            tokenTotal,
-            newEthTotal,
-            Math.Rounding.Ceil
-        );
+        uint256 newTokenTotal = Math.mulDiv(ethTotal, tokenTotal, newEthTotal, Math.Rounding.Ceil);
         tokensOut = tokenTotal - newTokenTotal;
         if (tokensOut == 0 || tokensOut > realTokenReserve) revert InsufficientLiquidity();
     }
 
-    /// @notice Quote sell output for tokens in, including fees.
-    function quoteSell(
-        uint256 tokensIn
-    ) public view returns (uint256 ethOut, uint256 protocolFee, uint256 creatorFee) {
+    function quoteSell(uint256 tokensIn) public view returns (uint256 ethOut, uint256 protocolFee, uint256 creatorFee) {
         if (tokensIn == 0) revert InvalidAmount();
         uint256 ethTotal = realEthReserve + VIRTUAL_ETH_RESERVE;
         uint256 tokenTotal = realTokenReserve + VIRTUAL_TOKEN_RESERVE;
         uint256 newTokenTotal = tokenTotal + tokensIn;
-        // Round the remaining ETH reserve up, never paying more ETH than the curve owes.
-        uint256 newEthTotal = Math.mulDiv(
-            ethTotal,
-            tokenTotal,
-            newTokenTotal,
-            Math.Rounding.Ceil
-        );
+        uint256 newEthTotal = Math.mulDiv(ethTotal, tokenTotal, newTokenTotal, Math.Rounding.Ceil);
         uint256 grossEthOut = ethTotal - newEthTotal;
         if (grossEthOut == 0 || grossEthOut > realEthReserve) revert InsufficientLiquidity();
         (protocolFee, creatorFee) = _fees(grossEthOut);
         ethOut = grossEthOut - protocolFee - creatorFee;
     }
 
-    function buy(
-        uint256 minTokensOut,
-        uint256 deadline
-    ) external payable nonReentrant returns (uint256 tokensOut) {
+    function buy(uint256 minTokensOut, uint256 deadline) external payable nonReentrant returns (uint256 tokensOut) {
         if (block.timestamp > deadline) revert DeadlineExpired();
         uint256 protocolFee;
         uint256 creatorFee;
         (tokensOut, protocolFee, creatorFee) = quoteBuy(msg.value);
         if (tokensOut < minTokensOut) revert SlippageExceeded(tokensOut, minTokensOut);
 
-        uint256 netEthIn = msg.value - protocolFee - creatorFee;
-        realEthReserve += netEthIn;
+        realEthReserve += msg.value - protocolFee - creatorFee;
         realTokenReserve -= tokensOut;
-
-        _payFee(protocolFeeRecipient, protocolFee);
-        _payFee(creator, creatorFee);
+        _accrueFee(protocolFeeRecipient, protocolFee);
+        _accrueFee(creator, creatorFee);
         token.safeTransfer(msg.sender, tokensOut);
-
         emit Buy(msg.sender, msg.value, tokensOut, protocolFee, creatorFee);
     }
 
-    function sell(
-        uint256 tokensIn,
-        uint256 minEthOut,
-        uint256 deadline
-    ) external nonReentrant returns (uint256 ethOut) {
+    function sell(uint256 tokensIn, uint256 minEthOut, uint256 deadline)
+        external
+        nonReentrant
+        returns (uint256 ethOut)
+    {
         if (block.timestamp > deadline) revert DeadlineExpired();
         uint256 protocolFee;
         uint256 creatorFee;
@@ -152,29 +118,36 @@ contract BondingCurveMarket is ReentrancyGuard {
 
         uint256 grossEthOut = ethOut + protocolFee + creatorFee;
         if (grossEthOut > realEthReserve) revert InsufficientLiquidity();
-
         token.safeTransferFrom(msg.sender, address(this), tokensIn);
         realTokenReserve += tokensIn;
         realEthReserve -= grossEthOut;
+        _accrueFee(protocolFeeRecipient, protocolFee);
+        _accrueFee(creator, creatorFee);
 
-        _payFee(protocolFeeRecipient, protocolFee);
-        _payFee(creator, creatorFee);
-        (bool success, ) = payable(msg.sender).call{value: ethOut}("");
-        require(success, "ETH_TRANSFER_FAILED");
-
+        (bool success,) = payable(msg.sender).call{value: ethOut}("");
+        if (!success) revert ETHTransferFailed();
         emit Sell(msg.sender, tokensIn, ethOut, protocolFee, creatorFee);
     }
 
-    function _fees(
-        uint256 amount
-    ) internal view returns (uint256 protocolFee, uint256 creatorFee) {
+    function withdrawFees() external nonReentrant returns (uint256 amount) {
+        amount = claimableFees[msg.sender];
+        if (amount == 0) revert NoFeesToWithdraw();
+        claimableFees[msg.sender] = 0;
+        totalClaimableFees -= amount;
+        (bool success,) = payable(msg.sender).call{value: amount}("");
+        if (!success) revert FeeWithdrawalFailed();
+        emit FeesWithdrawn(msg.sender, amount);
+    }
+
+    function _fees(uint256 amount) internal view returns (uint256 protocolFee, uint256 creatorFee) {
         protocolFee = Math.mulDiv(amount, protocolFeeBps, BPS_DENOMINATOR);
         creatorFee = Math.mulDiv(amount, creatorFeeBps, BPS_DENOMINATOR);
     }
 
-    function _payFee(address recipient, uint256 amount) internal {
+    function _accrueFee(address recipient, uint256 amount) internal {
         if (amount == 0) return;
-        (bool success, ) = payable(recipient).call{value: amount}("");
-        require(success, "FEE_TRANSFER_FAILED");
+        claimableFees[recipient] += amount;
+        totalClaimableFees += amount;
+        emit FeesAccrued(recipient, amount);
     }
 }

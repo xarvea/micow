@@ -41,11 +41,8 @@ contract LaunchpadInvariantTest is StdInvariant, Test {
 
     function setUp() public {
         LaunchpadFactory factory = new LaunchpadFactory(makeAddr("protocol"));
-        (address tokenAddress, address marketAddress) = factory.createToken(
-            "Micow Invariant",
-            "MCWI",
-            "ipfs://invariant"
-        );
+        (address tokenAddress, address marketAddress) =
+            factory.createToken("Micow Invariant", "MCWI", "ipfs://invariant");
         token = LaunchToken(tokenAddress);
         market = BondingCurveMarket(payable(marketAddress));
         handler = new MarketHandler(token, market);
@@ -57,15 +54,18 @@ contract LaunchpadInvariantTest is StdInvariant, Test {
     }
 
     function invariant_TokenInventoryIsConserved() public view {
-        assertEq(
-            token.balanceOf(address(market)) + token.balanceOf(address(handler)),
-            token.totalSupply()
-        );
+        assertEq(token.balanceOf(address(market)) + token.balanceOf(address(handler)), token.totalSupply());
     }
 
-    function invariant_EthBalanceCoversRecordedRealReserve() public view {
-        // Forced ETH can exceed recorded reserves; it must never make the market insolvent.
-        assertGe(address(market).balance, market.realEthReserve());
+    function invariant_EthBalanceCoversReservesAndFeeLiabilities() public view {
+        assertGe(address(market).balance, market.realEthReserve() + market.totalClaimableFees());
+    }
+
+    function invariant_FeeLiabilityMatchesRecipientBalances() public view {
+        assertEq(
+            market.claimableFees(market.creator()) + market.claimableFees(market.protocolFeeRecipient()),
+            market.totalClaimableFees()
+        );
     }
 
     function invariant_FeesStayWithinHardCap() public view {
