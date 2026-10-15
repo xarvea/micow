@@ -39,7 +39,7 @@ export function LaunchpadDashboard() {
     const controller = new AbortController();
     setLoadingTokens(true);
     setApiError(null);
-    fetch(apiBase + "/v1/tokens?limit=50", { signal: controller.signal })
+    fetch(apiBase + "/v1/tokens?limit=50&refresh=" + refreshKey, { signal: controller.signal })
       .then(async (response) => {
         if (!response.ok) throw new Error("API returned HTTP " + response.status);
         return response.json() as Promise<{ items: TokenRecord[] }>;

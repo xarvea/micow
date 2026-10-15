@@ -20,7 +20,7 @@ Run from a clean clone. These are the intended canonical checks; a phase is not 
 Only placeholders belong in .env.example. Never commit .env.
 
 ## 3. Install and verify JavaScript workspace
-    pnpm install
+    pnpm install --frozen-lockfile
     pnpm lint
     pnpm typecheck
     pnpm test

@@ -26,7 +26,7 @@ export default function HomePage() {
         </div>
         <p className="disclaimer">Testnet software. No real-value assets. Not financial advice.</p>
       </div>
-      <div aria-label="Protocol status" className="protocol-card">
+      <div aria-label="Protocol status" className="protocol-card" role="region">
         <div className="card-orbit"><span className="orbit-core" /><span className="orbit-node node-one" /><span className="orbit-node node-two" /><span className="orbit-node node-three" /></div>
         <div className="protocol-card-footer">
           <div><span className="metric-label">NETWORK</span><strong>Robinhood Testnet</strong></div>

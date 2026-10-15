@@ -1,5 +1,7 @@
 # Testnet Deployment and Verification
 
+**Current status: BLOCKED.** No testnet deployment has been performed. A testnet-only deployer key and test ETH funding are required. Supply `DEPLOYER_PRIVATE_KEY` and `PROTOCOL_FEE_RECIPIENT` through a protected local environment or secret manager; never commit the key or print it in logs.
+
 ## Network constants
 - Network: Robinhood Chain Testnet
 - Chain ID: 46630

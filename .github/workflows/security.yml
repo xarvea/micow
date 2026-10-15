@@ -27,7 +27,7 @@ jobs:
         with:
           node-version: 24.22.0
       - name: Install workspace before dependency audit
-        run: pnpm install --no-frozen-lockfile
+        run: pnpm install --frozen-lockfile
       - name: Fail on high or critical advisories
         run: pnpm audit --audit-level high
 

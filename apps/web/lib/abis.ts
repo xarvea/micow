@@ -14,6 +14,8 @@ export const marketAbi = parseAbi([
   "function realTokenReserve() view returns (uint256)",
   "function VIRTUAL_ETH_RESERVE() view returns (uint256)",
   "function VIRTUAL_TOKEN_RESERVE() view returns (uint256)",
+  "function VIRTUAL_ETH_RESERVE() view returns (uint256)",
+  "function VIRTUAL_TOKEN_RESERVE() view returns (uint256)",
   "function totalClaimableFees() view returns (uint256)",
   "function protocolFeeBps() view returns (uint16)",
   "function creatorFeeBps() view returns (uint16)",
