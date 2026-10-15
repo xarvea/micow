@@ -14,6 +14,7 @@ contract MarketHandler is Test {
     constructor(LaunchToken token_, BondingCurveMarket market_) {
         token = token_;
         market = market_;
+        token.approve(address(market), type(uint256).max);
         vm.deal(address(this), 1_000 ether);
     }
 

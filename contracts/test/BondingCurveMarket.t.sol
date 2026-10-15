@@ -35,6 +35,8 @@ contract BondingCurveMarketTest is Test {
         assertEq(address(market).balance, market.realEthReserve());
 
         vm.prank(trader);
+        token.approve(address(market), bought / 2);
+        vm.prank(trader);
         uint256 ethOut = market.sell(bought / 2, 1, block.timestamp);
         assertGt(ethOut, 0);
         assertEq(address(market).balance, market.realEthReserve());
@@ -91,6 +93,8 @@ contract BondingCurveMarketTest is Test {
         uint256 bought = market.buy{value: buyAmount}(0, block.timestamp);
         uint256 sellAmount = bound(uint256(rawSellAmount), 1, bought);
 
+        vm.prank(trader);
+        token.approve(address(market), sellAmount);
         vm.prank(trader);
         market.sell(sellAmount, 0, block.timestamp);
 
