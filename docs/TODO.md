@@ -38,7 +38,8 @@ Status values: PENDING, IN_PROGRESS, BLOCKED, COMPLETED, NOT_VERIFIED. A checked
 - [x] Implement indexed token discovery.
 - [x] Implement buy/sell quotes, fixed 1% min-output protection, and transaction deadlines.
 - [x] Implement wallet write, approval, receipt, and error states.
-- [ ] Add browser tests and responsive/accessibility checks.
+- [x] Add Playwright browser smoke tests for launchpad guardrails and indexer failure states.
+- [ ] Confirm browser tests pass in CI and run responsive/accessibility checks.
 - [x] Add price-impact estimate and explicit min-received display.
 
 ## P4 — Indexer and API

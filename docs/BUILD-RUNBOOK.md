@@ -24,6 +24,7 @@ Only placeholders belong in .env.example. Never commit .env.
     pnpm lint
     pnpm typecheck
     pnpm test
+    pnpm --filter @micow/web test:e2e
     pnpm build
 
 Commit the generated pnpm lockfile. CI should use frozen lockfile installs once the lockfile is established.

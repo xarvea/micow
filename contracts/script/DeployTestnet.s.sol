@@ -13,7 +13,8 @@ contract DeployTestnet is Script {
         address protocolFeeRecipient = vm.envAddress("PROTOCOL_FEE_RECIPIENT");
         require(protocolFeeRecipient != address(0), "ZERO_FEE_RECIPIENT");
 
-        vm.startBroadcast();
+        uint256 deployerPrivateKey = vm.envUint("DEPLOYER_PRIVATE_KEY");
+        vm.startBroadcast(deployerPrivateKey);
         factory = new LaunchpadFactory(protocolFeeRecipient);
         vm.stopBroadcast();
 

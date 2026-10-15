@@ -11,7 +11,8 @@ MICOW is an independently implemented, testnet-only EVM token launchpad targetin
 - [x] Read-only Fastify API and PostgreSQL-backed reorg-aware indexer implementation added.
 - [ ] Contract compilation, fuzz/invariant tests, and security review passed.
 - [x] pnpm lockfile generated and committed by the CI bootstrap job.
-- [ ] API/indexer integration tests and browser tests verified.
+- [ ] API/indexer integration tests verified.
+- [ ] Playwright browser smoke tests pass in CI.
 - [ ] Testnet deployment and explorer verification completed.
 - [ ] All CI/security gates green and PR merged.
 

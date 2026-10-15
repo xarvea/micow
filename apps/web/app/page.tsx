@@ -26,14 +26,14 @@ export default function HomePage() {
         </div>
         <p className="disclaimer">Testnet software. No real-value assets. Not financial advice.</p>
       </div>
-      <section aria-label="Protocol status" className="protocol-card">
+      <div aria-label="Protocol status" className="protocol-card">
         <div className="card-orbit"><span className="orbit-core" /><span className="orbit-node node-one" /><span className="orbit-node node-two" /><span className="orbit-node node-three" /></div>
         <div className="protocol-card-footer">
           <div><span className="metric-label">NETWORK</span><strong>Robinhood Testnet</strong></div>
           <div><span className="metric-label">CHAIN ID</span><strong>46630</strong></div>
         </div>
         <div className="contract-status"><span className="metric-label">FACTORY ADDRESS</span><code>{factoryAddress || "Awaiting reviewed deployment"}</code></div>
-      </section>
+      </div>
     </section>
     <section className="feature-section" id="how-it-works">
       <div className="section-heading"><p className="eyebrow">PROTOCOL PRINCIPLES</p><h2>Simple rules. <span>Verifiable execution.</span></h2></div>

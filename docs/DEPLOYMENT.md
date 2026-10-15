@@ -9,6 +9,10 @@
 
 Public RPC is rate-limited. Use a dedicated provider for sustained indexing. Query eth_chainId at runtime rather than trusting a label.
 
+## Current deployment status
+
+No testnet deployment has been performed. Deployment remains blocked until a testnet-only deployer key is supplied through a protected local environment or secret manager and the wallet is funded with test ETH. Do not add the key to Git, CI logs, issues, or chat.
+
 ## Preflight gates
 - [ ] Contract format, build, unit, fuzz, and invariant tests pass on the exact commit.
 - [ ] No critical/high unresolved contract finding.
