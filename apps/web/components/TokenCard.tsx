@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useAccount, useReadContract, useWaitForTransactionReceipt, useWriteContract } from "wagmi";
 import { formatUnits, isAddress, parseEther, parseUnits, type Address } from "viem";
 import { erc20Abi, marketAbi } from "@/lib/abis";
+import { estimatePriceImpactBps, formatImpactBps, minimumOutput } from "@/lib/quotes";
 
 type TokenRecord = {
   token_address: string;
@@ -71,6 +72,30 @@ export function TokenCard({ token }: { token: TokenRecord }) {
     args: [address ?? "0x0000000000000000000000000000000000000000"],
     query: { enabled: Boolean(address && tokenAddress && chainId === 46630) },
   });
+  const realEthReserveQuery = useReadContract({
+    address: marketAddress,
+    abi: marketAbi,
+    functionName: "realEthReserve",
+    query: { enabled: Boolean(marketAddress) },
+  });
+  const realTokenReserveQuery = useReadContract({
+    address: marketAddress,
+    abi: marketAbi,
+    functionName: "realTokenReserve",
+    query: { enabled: Boolean(marketAddress) },
+  });
+  const virtualEthReserveQuery = useReadContract({
+    address: marketAddress,
+    abi: marketAbi,
+    functionName: "VIRTUAL_ETH_RESERVE",
+    query: { enabled: Boolean(marketAddress) },
+  });
+  const virtualTokenReserveQuery = useReadContract({
+    address: marketAddress,
+    abi: marketAbi,
+    functionName: "VIRTUAL_TOKEN_RESERVE",
+    query: { enabled: Boolean(marketAddress) },
+  });
 
   const trade = useWriteContract();
   const tradeReceipt = useWaitForTransactionReceipt({ hash: trade.data });
@@ -85,10 +110,26 @@ export function TokenCard({ token }: { token: TokenRecord }) {
   const sellQuote = sellQuoteQuery.data as readonly [bigint, bigint, bigint] | undefined;
   const allowance = allowanceQuery.data as bigint | undefined;
   const balance = balanceQuery.data as bigint | undefined;
+  const realEthReserve = realEthReserveQuery.data as bigint | undefined;
+  const realTokenReserve = realTokenReserveQuery.data as bigint | undefined;
+  const virtualEthReserve = virtualEthReserveQuery.data as bigint | undefined;
+  const virtualTokenReserve = virtualTokenReserveQuery.data as bigint | undefined;
+  const buySpotOutput = buyWei !== undefined && realEthReserve !== undefined && realTokenReserve !== undefined
+    && virtualEthReserve !== undefined && virtualTokenReserve !== undefined
+    ? buyWei * (realTokenReserve + virtualTokenReserve) / (realEthReserve + virtualEthReserve)
+    : undefined;
+  const sellSpotOutput = sellWei !== undefined && realEthReserve !== undefined && realTokenReserve !== undefined
+    && virtualEthReserve !== undefined && virtualTokenReserve !== undefined && realTokenReserve + virtualTokenReserve > 0n
+    ? sellWei * (realEthReserve + virtualEthReserve) / (realTokenReserve + virtualTokenReserve)
+    : undefined;
+  const buyMinimum = buyQuote ? minimumOutput(buyQuote[0]) : undefined;
+  const sellMinimum = sellQuote ? minimumOutput(sellQuote[0]) : undefined;
+  const buyImpact = estimatePriceImpactBps(buySpotOutput, buyQuote?.[0]);
+  const sellImpact = estimatePriceImpactBps(sellSpotOutput, sellQuote?.[0]);
 
   function buy() {
     if (!marketAddress || !buyWei || !buyQuote) return;
-    const minimum = buyQuote[0] * 9_900n / 10_000n;
+    const minimum = minimumOutput(buyQuote[0]);
     trade.writeContract({
       address: marketAddress,
       abi: marketAbi,
@@ -111,7 +152,7 @@ export function TokenCard({ token }: { token: TokenRecord }) {
       });
       return;
     }
-    const minimum = sellQuote[0] * 9_900n / 10_000n;
+    const minimum = minimumOutput(sellQuote[0]);
     trade.writeContract({
       address: marketAddress,
       abi: marketAbi,
@@ -141,6 +182,8 @@ export function TokenCard({ token }: { token: TokenRecord }) {
         <label htmlFor={"buy-" + token.token_address}>ETH amount</label>
         <input id={"buy-" + token.token_address} inputMode="decimal" min="0" onChange={(event) => setBuyAmount(event.target.value)} placeholder="0.01" step="any" type="number" value={buyAmount} />
         <p className="quote-line">Estimated tokens <strong>{buyQuote ? displayAmount(buyQuote[0]) : "—"}</strong></p>
+        <p className="quote-line">Min received (1% slippage) <strong>{buyMinimum !== undefined ? displayAmount(buyMinimum) : "—"}</strong></p>
+        <p className="quote-line">Price impact incl. fees <strong>{formatImpactBps(buyImpact)}</strong></p>
         <p className="quote-line">Protocol + creator fee <strong>{buyQuote ? displayAmount(buyQuote[1] + buyQuote[2]) + " ETH" : "—"}</strong></p>
         <button className="button button-primary full-width" disabled={!canWrite || !buyQuote || !buyWei || trade.isPending || tradeReceipt.isLoading} onClick={buy} type="button">{trade.isPending ? "Confirm in wallet…" : "Buy token"}</button>
       </section>
@@ -149,6 +192,8 @@ export function TokenCard({ token }: { token: TokenRecord }) {
         <label htmlFor={"sell-" + token.token_address}>Token amount</label>
         <input id={"sell-" + token.token_address} inputMode="decimal" min="0" onChange={(event) => setSellAmount(event.target.value)} placeholder="1000" step="any" type="number" value={sellAmount} />
         <p className="quote-line">Estimated ETH <strong>{sellQuote ? displayAmount(sellQuote[0]) : "—"}</strong></p>
+        <p className="quote-line">Min received (1% slippage) <strong>{sellMinimum !== undefined ? displayAmount(sellMinimum) + " ETH" : "—"}</strong></p>
+        <p className="quote-line">Price impact incl. fees <strong>{formatImpactBps(sellImpact)}</strong></p>
         <p className="quote-line">Protocol + creator fee <strong>{sellQuote ? displayAmount(sellQuote[1] + sellQuote[2]) + " ETH" : "—"}</strong></p>
         <button className="button button-secondary full-width" disabled={!canWrite || !sellQuote || !sellWei || allowanceQuery.isLoading || trade.isPending || tradeReceipt.isLoading || approval.isPending || (balance !== undefined && sellWei !== undefined && balance < sellWei)} onClick={sell} type="button">{approval.isPending ? "Approve in wallet…" : allowance !== undefined && sellWei !== undefined && allowance < sellWei ? "Approve then sell" : "Sell token"}</button>
       </section>

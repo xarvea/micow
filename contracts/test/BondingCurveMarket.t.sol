@@ -21,6 +21,28 @@ contract RejectingFeeRecipient {
     }
 }
 
+
+contract ReentrantFeeRecipient {
+    BondingCurveMarket public market;
+
+    receive() external payable {
+        market.withdrawFees();
+    }
+
+    function createAndBuy(LaunchpadFactory factory) external payable returns (BondingCurveMarket createdMarket) {
+        (address tokenAddress, address marketAddress) =
+            factory.createToken("Reentrant Creator", "RENT", "ipfs://reentrant");
+        require(tokenAddress != address(0), "NO_TOKEN");
+        market = BondingCurveMarket(payable(marketAddress));
+        createdMarket = market;
+        market.buy{value: msg.value}(0, block.timestamp);
+    }
+
+    function withdraw() external {
+        market.withdrawFees();
+    }
+}
+
 contract BondingCurveMarketTest is Test {
     LaunchToken internal token;
     BondingCurveMarket internal market;
@@ -43,16 +65,21 @@ contract BondingCurveMarketTest is Test {
     }
 
     function testBuyAndSellPreserveReserveAccounting() public {
+        (uint256 quotedBuy,,) = market.quoteBuy(0.1 ether);
         vm.prank(trader);
-        uint256 bought = market.buy{value: 0.1 ether}(1, block.timestamp);
+        uint256 bought = market.buy{value: 0.1 ether}(quotedBuy, block.timestamp);
+        assertEq(bought, quotedBuy);
         assertGt(bought, 0);
         assertEq(token.balanceOf(trader), bought);
         assertEq(address(market).balance, market.realEthReserve() + market.totalClaimableFees());
 
+        uint256 sellAmount = bought / 2;
+        (uint256 quotedSell,,) = market.quoteSell(sellAmount);
         vm.prank(trader);
-        token.approve(address(market), bought / 2);
+        token.approve(address(market), sellAmount);
         vm.prank(trader);
-        uint256 ethOut = market.sell(bought / 2, 1, block.timestamp);
+        uint256 ethOut = market.sell(sellAmount, quotedSell, block.timestamp);
+        assertEq(ethOut, quotedSell);
         assertGt(ethOut, 0);
         assertEq(address(market).balance, market.realEthReserve() + market.totalClaimableFees());
         assertEq(token.balanceOf(address(market)) + token.balanceOf(trader), token.totalSupply());
@@ -79,6 +106,17 @@ contract BondingCurveMarketTest is Test {
         vm.expectRevert();
         vm.prank(trader);
         market.sell(bought / 2, 0, block.timestamp);
+    }
+
+
+    function testTinySellRevertsWhenOutputRoundsToZero() public {
+        vm.prank(trader);
+        market.buy{value: 0.1 ether}(0, block.timestamp);
+        vm.prank(trader);
+        token.approve(address(market), 1);
+        vm.expectRevert(BondingCurveMarket.InsufficientLiquidity.selector);
+        vm.prank(trader);
+        market.sell(1, 0, block.timestamp);
     }
 
     function testFeeRecipientsCanWithdrawAccruedFees() public {
@@ -109,6 +147,22 @@ contract BondingCurveMarketTest is Test {
         assertEq(
             address(rejectingMarket).balance, rejectingMarket.realEthReserve() + rejectingMarket.totalClaimableFees()
         );
+    }
+
+
+    function testFeeWithdrawalCannotReenter() public {
+        ReentrantFeeRecipient reentrant = new ReentrantFeeRecipient();
+        LaunchpadFactory reentrantFactory = new LaunchpadFactory(address(reentrant));
+        vm.deal(address(this), 1 ether);
+        BondingCurveMarket reentrantMarket = reentrant.createAndBuy{value: 0.1 ether}(reentrantFactory);
+        uint256 claimable = reentrantMarket.claimableFees(address(reentrant));
+        assertGt(claimable, 0);
+
+        vm.expectRevert(BondingCurveMarket.FeeWithdrawalFailed.selector);
+        reentrant.withdraw();
+
+        assertEq(reentrantMarket.claimableFees(address(reentrant)), claimable);
+        assertEq(reentrantMarket.totalClaimableFees(), claimable);
     }
 
     function testDirectEtherTransferReverts() public {

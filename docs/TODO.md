@@ -19,8 +19,8 @@ Status values: PENDING, IN_PROGRESS, BLOCKED, COMPLETED, NOT_VERIFIED. A checked
 - [x] Implement immutable bounded fees and pull-based fee withdrawal.
 - [x] Add reentrancy protection and event emissions.
 - [ ] Confirm compiler build and bytecode sizes in CI.
-- [ ] Add malicious fee-recipient reentrancy tests.
-- [ ] Add quote/execution equivalence and rounding-boundary tests.
+- [x] Add rejecting and reentrant fee-recipient tests.
+- [x] Add quote/execution equivalence and rounding-boundary tests.
 - [ ] Review curve economics, inventory limits, and MEV exposure.
 
 ## P2 — Contract testing
@@ -39,7 +39,7 @@ Status values: PENDING, IN_PROGRESS, BLOCKED, COMPLETED, NOT_VERIFIED. A checked
 - [x] Implement buy/sell quotes, fixed 1% min-output protection, and transaction deadlines.
 - [x] Implement wallet write, approval, receipt, and error states.
 - [ ] Add browser tests and responsive/accessibility checks.
-- [ ] Add price-impact estimate and explicit min-received display.
+- [x] Add price-impact estimate and explicit min-received display.
 
 ## P4 — Indexer and API
 - [x] Add PostgreSQL schema and migrations.
