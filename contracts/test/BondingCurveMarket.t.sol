@@ -143,8 +143,7 @@ contract BondingCurveMarketTest is Test {
         assertEq(LaunchToken(tokenAddress).balanceOf(address(rejector)), tokensOut);
         assertGt(rejectingMarket.claimableFees(address(rejector)), 0);
         assertEq(
-            address(rejectingMarket).balance,
-            rejectingMarket.realEthReserve() + rejectingMarket.totalClaimableFees()
+            address(rejectingMarket).balance, rejectingMarket.realEthReserve() + rejectingMarket.totalClaimableFees()
         );
     }
 
