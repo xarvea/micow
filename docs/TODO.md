@@ -18,7 +18,7 @@ Status values: PENDING, IN_PROGRESS, BLOCKED, COMPLETED, NOT_VERIFIED. A checked
 - [x] Implement curve quote/buy/sell with min-output and deadline.
 - [x] Implement immutable bounded fees and pull-based fee withdrawal.
 - [x] Add reentrancy protection and event emissions.
-- [ ] Confirm compiler build and bytecode sizes in CI.
+- [x] Confirm compiler build and bytecode sizes in CI.
 - [x] Add rejecting and reentrant fee-recipient tests.
 - [x] Add quote/execution equivalence and rounding-boundary tests.
 - [ ] Review curve economics, inventory limits, and MEV exposure.
@@ -27,8 +27,8 @@ Status values: PENDING, IN_PROGRESS, BLOCKED, COMPLETED, NOT_VERIFIED. A checked
 - [x] Add factory and market unit tests.
 - [x] Add buy/sell fuzz tests.
 - [x] Add supply, inventory, ETH reserve, and fee-liability invariants.
-- [ ] Run standard Foundry suite successfully.
-- [ ] Run high-intensity CI fuzz/invariant profile successfully.
+- [x] Run standard Foundry suite successfully.
+- [x] Run high-intensity CI fuzz/invariant profile successfully.
 - [ ] Add gas snapshots and inspect deployment bytecode size.
 
 ## P3 — Web
@@ -39,7 +39,8 @@ Status values: PENDING, IN_PROGRESS, BLOCKED, COMPLETED, NOT_VERIFIED. A checked
 - [x] Implement buy/sell quotes, fixed 1% min-output protection, and transaction deadlines.
 - [x] Implement wallet write, approval, receipt, and error states.
 - [x] Add Playwright browser smoke tests for launchpad guardrails and indexer failure states.
-- [ ] Confirm browser tests pass in CI and run responsive/accessibility checks.
+- [x] Confirm Playwright browser smoke tests pass in CI.
+- [ ] Run broader responsive/accessibility checks.
 - [x] Add price-impact estimate and explicit min-received display.
 
 ## P4 — Indexer and API
@@ -62,7 +63,7 @@ Status values: PENDING, IN_PROGRESS, BLOCKED, COMPLETED, NOT_VERIFIED. A checked
 ## P6 — Testnet
 - [x] Add deployment script that asserts chain ID 46630.
 - [ ] Dry-run deployment and inspect bytecode size/gas.
-- [ ] Deploy factory only after contract gates pass.
+- [ ] Deploy factory only after contract gates pass. **BLOCKED:** no deployer key or test ETH is available in the execution environment.
 - [ ] Record chain ID, addresses, tx hashes, block numbers, compiler/settings.
 - [ ] Verify contracts on explorer where supported.
 - [ ] Smoke-test create, buy, sell, fee withdrawal, API, and indexer.

@@ -1,6 +1,6 @@
 # Acceptance Criteria and Phase Gates
 
-A phase cannot be marked complete without recorded command output or CI evidence. Current status at repository bootstrap: all implementation gates are **PENDING**.
+A phase cannot be marked complete without recorded command output or CI evidence. Current status: contract and web automated CI gates have passed on the feature branch. PostgreSQL integration/reconciliation tests, independent contract review, operational recovery drills, and actual testnet deployment remain pending or blocked. Recheck the latest CI run before merging.
 
 ## F0 — Foundation and specification
 
