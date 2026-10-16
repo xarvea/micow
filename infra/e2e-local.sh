@@ -8,7 +8,7 @@ LOCAL_RPC="${LOCAL_RPC_URL:-http://127.0.0.1:8545}"
 DATABASE_URL="${DATABASE_URL:-postgresql://micow:micow@127.0.0.1:5432/micow}"
 API_URL="${API_URL:-http://127.0.0.1:4000}"
 WEB_URL="${WEB_URL:-http://127.0.0.1:3000}"
-ANVIL_KEY="0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
+ANVIL_KEY=""
 LOCAL_ADDRESS="0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266"
 LOG_DIR="${TMPDIR:-/tmp}/micow-p5-e2e"
 mkdir -p "$LOG_DIR"
@@ -48,11 +48,14 @@ export API_PORT=4000
 export API_HOST=127.0.0.1
 export WEB_ORIGIN="$WEB_URL"
 
-anvil --host 127.0.0.1 --port 8545 --chain-id 46630 --silent >"$LOG_DIR/anvil.log" 2>&1 &
+anvil --host 127.0.0.1 --port 8545 --chain-id 46630 >"$LOG_DIR/anvil.log" 2>&1 &
 ANVIL_PID=$!
 wait_for "local Anvil chain 46630" "cast chain-id --rpc-url '$LOCAL_RPC' | grep -qx 46630"
+wait_for "Anvil development key" "grep -qE 'Private Key: 0x[a-fA-F0-9]{64}' \"$LOG_DIR/anvil.log\""
 
-# Local-only development key: this is a public Anvil test key, never a real secret.
+# Read the ephemeral key printed by the local Anvil process; never store a key in source.
+ANVIL_KEY="$(grep -m1 -Eo 'Private Key: 0x[a-fA-F0-9]{64}' "$LOG_DIR/anvil.log" | awk '{print $3}')"
+if [[ ! "$ANVIL_KEY" =~ ^0x[a-fA-F0-9]{64}$ ]]; then echo "ERROR: local Anvil key was not found" >&2; exit 1; fi
 export DEPLOYER_PRIVATE_KEY="$ANVIL_KEY"
 export PROTOCOL_FEE_RECIPIENT="$LOCAL_ADDRESS"
 forge script contracts/script/DeployTestnet.s.sol:DeployTestnet --rpc-url "$LOCAL_RPC" --broadcast -vvv >"$LOG_DIR/deploy.log" 2>&1
