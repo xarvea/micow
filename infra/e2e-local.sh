@@ -184,7 +184,7 @@ INDEXER_PID=""
 pnpm --filter @micow/api db:migrate >"$LOG_DIR/migrate-after-restart.log" 2>&1
 INDEXER_RUN=2
 start_indexer
-wait_for "indexer checkpoint resume" "curl -fsS '$API_URL/ready' | jq -e --arg checkpoint '$CHECKPOINT_BEFORE' '.indexedThrough == \\$checkpoint'"
+wait_for "indexer checkpoint resume" "curl -fsS '$API_URL/ready' | jq -e --arg checkpoint '$CHECKPOINT_BEFORE' '.indexedThrough == \$checkpoint'"
 trades_json="$(curl -fsS "$API_URL/v1/tokens/$TOKEN_ADDRESS/trades?limit=10&offset=0")"
 printf '%s' "$trades_json" | jq -e '.items | length == 2 and (map(.side) | sort == ["buy","sell"])' >/dev/null
 
