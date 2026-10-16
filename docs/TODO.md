@@ -1,6 +1,6 @@
 # MICOW Master TODO
 
-Status snapshot 2026-10-16: PR #26 merged to `main` as `d9a12a94bd146036a7e1d7b579e6eb54536fd93e`. Post-merge CI `38930901087` and security `38930901199` are associated with that SHA; check final conclusions before release sign-off. No deployment transaction was broadcast.
+Status snapshot 2026-10-16: PR #27 merged to `main` as `01530237c7d6cd2d4a88322365a4aa2d6037ef22`. Post-merge CI `38934626188` and security `38934626176` passed on that exact SHA. No deployment transaction was broadcast.
 
 Status values: PENDING, IN_PROGRESS, BLOCKED, COMPLETED, NOT_VERIFIED. A checked implementation task is not a claim that its acceptance tests passed.
 
@@ -101,7 +101,7 @@ Status values: PENDING, IN_PROGRESS, BLOCKED, COMPLETED, NOT_VERIFIED. A checked
 
 ## P8 — Testnet launch readiness
 - [x] Publish build, deployment, and operations runbooks.
-- [ ] Run backup/restore drill.
+- [ ] Run backup/restore drill. A guarded local restore verifier and CI fixture drill are proposed in PR for review; this item remains open until CI evidence is green.
 - [x] Exercise database reorg rollback/replay in PostgreSQL CI.
 - [x] Test bounded RPC retry and backoff with unit tests.
 - [ ] Run RPC outage recovery drill against an unavailable/recovering provider.

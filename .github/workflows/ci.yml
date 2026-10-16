@@ -110,6 +110,88 @@ jobs:
       - name: Indexer process-level RPC outage and restart test
         run: pnpm --filter @micow/indexer test:process
 
+  postgres-backup-restore:
+    name: PostgreSQL backup and restore verification
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: micow
+          POSTGRES_PASSWORD: micow
+          POSTGRES_DB: micow
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U micow -d micow"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+    env:
+      SOURCE_DATABASE_URL: postgresql://micow:micow@127.0.0.1:5432/micow
+      RESTORE_DATABASE_URL: postgresql://micow:micow@127.0.0.1:5432/micow_restore
+    steps:
+      - name: Checkout
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - name: Install PostgreSQL client tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes postgresql-client
+      - name: Apply schema and seed deterministic recovery fixture
+        shell: bash
+        run: |
+          set -euo pipefail
+          psql "$SOURCE_DATABASE_URL" -v ON_ERROR_STOP=1 -f packages/database/migrations/001_init.sql
+          psql "$SOURCE_DATABASE_URL" -v ON_ERROR_STOP=1 <<'SQL'
+          INSERT INTO indexed_blocks (chain_id, block_number, block_hash, parent_hash)
+          VALUES (46630, 42, '0xblock42', '0xblock41');
+          INSERT INTO indexed_events (
+            chain_id, event_id, tx_hash, log_index, block_number, block_hash,
+            contract_address, topic0, topics, data, event_name, payload
+          ) VALUES (
+            46630, 'backup-drill-event-1', '0xbackup-event-tx', 0, 42, '0xblock42',
+            '0x0000000000000000000000000000000000000001', '0xtopic',
+            '["0xtopic"]'::jsonb, '0x', 'TokenCreated',
+            '{"token":"0x0000000000000000000000000000000000000002"}'::jsonb
+          );
+          INSERT INTO tokens (
+            chain_id, token_address, market_address, creator_address, name, symbol,
+            total_supply, metadata_uri, created_block
+          ) VALUES (
+            46630, '0x0000000000000000000000000000000000000002',
+            '0x0000000000000000000000000000000000000003',
+            '0x0000000000000000000000000000000000000004',
+            'Backup Drill', 'BKP', 1000000, 'ipfs://backup-drill', 42
+          );
+          INSERT INTO trades (
+            chain_id, tx_hash, log_index, token_address, market_address, side,
+            trader_address, amount_in, amount_out, protocol_fee, creator_fee,
+            block_number, block_hash
+          ) VALUES (
+            46630, '0xbackup-trade-tx', 0,
+            '0x0000000000000000000000000000000000000002',
+            '0x0000000000000000000000000000000000000003', 'buy',
+            '0x0000000000000000000000000000000000000005',
+            100, 200, 1, 1, 42, '0xblock42'
+          );
+          SQL
+          psql "postgresql://micow:micow@127.0.0.1:5432/postgres" -v ON_ERROR_STOP=1 -c "CREATE DATABASE micow_restore"
+      - name: Restore into a separate empty database and verify contents
+        run: bash infra/backup-restore-drill.sh
+      - name: Verify restore refuses a non-empty target
+        shell: bash
+        run: |
+          set -euo pipefail
+          if bash infra/backup-restore-drill.sh; then
+            echo "ERROR: restore script accepted a non-empty target database" >&2
+            exit 1
+          fi
+
   local-service-e2e:
     name: Local Anvil, PostgreSQL, API, indexer, and web E2E
     runs-on: ubuntu-latest

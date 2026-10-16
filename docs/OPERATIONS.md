@@ -7,12 +7,18 @@
 - Alert on repeated indexer-cycle failures, stale indexed-through block, database connection errors, and RPC error-rate spikes.
 
 ## PostgreSQL backup and restore
-For local/testnet deployments, run from a protected operator shell.
+For local/testnet deployments, run from a protected operator shell. Create a custom-format backup and inspect its archive manifest:
 
     docker compose -f infra/compose.yaml exec -T postgres pg_dump -U micow -d micow -Fc > micow-testnet.dump
     pg_restore --list micow-testnet.dump
 
-Restore into a newly created database first; never overwrite the only copy of a live database. Verify token/trade row counts, maximum indexed block, and reconciliation after restore. Store backups outside the repository and restrict access because database content may contain operational metadata.
+For a controlled recovery drill, provision a **separate, empty target database** first and set `SOURCE_DATABASE_URL` and `RESTORE_DATABASE_URL` to distinct database names. Then run:
+
+    bash infra/backup-restore-drill.sh
+
+The script refuses a missing MICOW schema, identical source/target database names, or a non-empty restore target. It takes a temporary custom-format dump, restores only into the separate empty target, and compares row counts for indexed blocks/events, tokens, trades, plus the maximum indexed block. The temporary dump is removed on exit; this script is a verification drill, not a durable backup system. The CI drill uses deterministic fixture data and verifies that a second restore attempt fails closed on a non-empty target.
+
+Never overwrite the only copy of a live database. Store durable backups outside the repository, restrict access because database content may contain operational metadata, and verify reconciliation after restoring a real indexed database. Live on-chain reconciliation still requires a deployed factory and approved testnet prerequisites.
 
 ## RPC outage
 1. Do not reset indexer checkpoints.
