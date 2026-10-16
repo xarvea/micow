@@ -56,7 +56,7 @@ wait_for "local Anvil chain 46630" "cast chain-id --rpc-url '$LOCAL_RPC' | grep 
 export DEPLOYER_PRIVATE_KEY="$ANVIL_KEY"
 export PROTOCOL_FEE_RECIPIENT="$LOCAL_ADDRESS"
 forge script contracts/script/DeployTestnet.s.sol:DeployTestnet --rpc-url "$LOCAL_RPC" --broadcast -vvv >"$LOG_DIR/deploy.log" 2>&1
-FACTORY_ADDRESS="$(grep -Eo 'LaunchpadFactory[[:space:]]+0x[a-fA-F0-9]{40}' "$LOG_DIR/deploy.log" | tail -n 1 | awk '{print $2}')"
+FACTORY_ADDRESS="$(grep -Eo 'LaunchpadFactory:?[[:space:]]+0x[a-fA-F0-9]{40}' "$LOG_DIR/deploy.log" | tail -n 1 | awk '{print $2}')"
 if [[ ! "$FACTORY_ADDRESS" =~ ^0x[a-fA-F0-9]{40}$ ]]; then
   cat "$LOG_DIR/deploy.log" >&2
   echo "ERROR: local factory address not found in deployment output" >&2
