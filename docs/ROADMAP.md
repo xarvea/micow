@@ -1,15 +1,16 @@
 # MICOW Delivery Roadmap
 
-Project state as of 2026-10-16: **P4 — Indexer and API reliability**. Testnet-only. A phase is complete only when evidence is recorded against its acceptance gate. The project is not audited and is not authorized for mainnet.
+Project state as of 2026-10-16: **P5 — Local integration and release-gate hardening**. Testnet-only. A phase is complete only when evidence is recorded against its acceptance gate. The project is not audited and is not authorized for mainnet.
 
 ## Current execution snapshot
 
 - **Merged:** foundation, contract baseline, RPC/API hardening, PostgreSQL idempotency/reorg integration, atomic indexer persistence, and worker restart/cycle recovery.
-- **Current main snapshot:** `f3a398781b30bf35d633e4de4d2bdf39672cd166`. CI `38916331756` and security `38916331618` passed on this exact SHA; this does not establish economic review, gas snapshot, P5 E2E, or deployment readiness.
+- **Current main snapshot after PR #26:** `d9a12a94bd146036a7e1d7b579e6eb54536fd93e`. Post-merge CI `38930901087` and security `38930901199` are the verification runs for this SHA; check final conclusions before declaring the baseline verified.
 - **Merged:** PR #6 read-only reconciliation CLI, PR #7 process-level outage/restart acceptance, PR #8 fee-policy proposal documentation, PR #13 post-PR11 documentation refresh, and PR #14 forced-ETH accounting regression test.
 - **PR #7 verification:** CI run `38837255615` and security run `38837255569` passed on the latest PR head before merge. Current main CI/security runs `38916331756` and `38916331618` passed on exact SHA `f3a398781b30bf35d633e4de4d2bdf39672cd166`.
 - **Blocked:** live reconciliation and testnet deployment require an actual deployed factory; deployment also requires a protected testnet-only deployer key, test ETH, a reviewed fee recipient, and protected environment reviewers.
-- **Not complete:** real-provider outage drill, local full-service E2E, backup/restore drill, independent contract/economic review.
+- **Merged:** PR #18 economic regression tests, PR #19 gas instrumentation, PR #22 preliminary source-based economic/MEV review, PR #23 restart/resume E2E, PR #25 measured gas receipt baseline, and PR #26 API database-outage readiness plus fail-closed endpoint guards.
+- **Not complete:** external-provider outage drill, backup/restore drill, independent contract audit, owner decision on residual MEV sandwich risk, live testnet reconciliation and deployment.
 - **Safety boundary:** no mainnet configuration, deployment, or real-value transaction is authorized by this roadmap.
 
 ## Phase 0 — Foundation and specification
@@ -26,7 +27,7 @@ Exit gate: contracts compile without unexplained warnings; invariants and unit/f
 
 ## Phase 2 — Contract test quality
 Tasks: success/revert unit tests; zero/boundary/extreme fuzzing; stateful buy/sell invariant handler; reserve solvency; token conservation; fee liability accounting; malicious receiver tests; gas and bytecode-size report.
-Exit gate: standard and CI-profile test suites pass with recorded runs; no unexplained invariant failures.
+Exit gate: standard and CI-profile test suites pass with recorded runs; no unexplained invariant failures. Receipt-based local Anvil gas baselines are recorded in `docs/GAS-BASELINE.md`; CI regression thresholds remain unset pending review.
 
 ## Phase 3 — Web application
 Tasks: Next.js App Router; strict TypeScript; responsive dashboard; wallet connect/disconnect; wrong-chain handling; factory/token/market reads; create-token form; buy/sell quote and min-output; pending/confirmed/reverted transaction states; metadata safety; accessible errors/loading states.
@@ -34,11 +35,11 @@ Exit gate: lint/typecheck/build pass; wallet flow and wrong-chain flow tested; n
 
 ## Phase 4 — Database, indexer, and API
 Tasks: PostgreSQL migrations; block/hash checkpoints; event identity uniqueness; atomic event+projection+checkpoint transactions; idempotent replay; reorg common-ancestor rollback and replay; worker retry/shutdown and durable restart resume; read-only Fastify endpoints; schema validation; rate limiting; pagination; readiness; read-only reconciliation CLI against factory registry and market token getters.
-Exit gate: integration tests prove duplicate replay is harmless, reorgs repair projections, checkpoints are atomic, and projection-vs-event consistency is tested. Full phase exit additionally requires a process-level outage/restart drill and a successful live reconciliation against an actually deployed testnet factory.
+Exit gate: integration tests prove duplicate replay is harmless, reorgs repair projections, checkpoints are atomic, and projection-vs-event consistency is tested. Full phase exit additionally requires a successful live reconciliation against an actually deployed testnet factory.
 
 ## Phase 5 — Local integration and developer experience
 Tasks: one-command local services; migration and seed tooling; environment validation; end-to-end smoke tests; deterministic ABI/address manifest; troubleshooting.
-Exit gate: clean checkout can install, build, test, migrate, and run services using the runbook.
+Exit gate: clean checkout can install, build, test, migrate, and run services using the runbook. CI E2E covers local Anvil create/buy/sell, API readiness during database outage/recovery, migration reapply, indexer durable checkpoint resume/idempotent replay, and clean shutdown. Endpoint guards reject nonlocal RPC, database, API, and web targets before deployment commands.
 
 ## Phase 6 — Testnet deployment
 Tasks: confirm chain ID 46630; funded test wallet; dry run; deploy factory; record deployment transaction/block/compiler settings; verify source/metadata if supported; smoke-test token creation, buy, sell, fee withdrawal; verify indexed data.
