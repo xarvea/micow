@@ -25,9 +25,10 @@ contract GasSnapshotTest is Test {
         factory = new LaunchpadFactory(protocolFeeRecipient);
         vm.deal(creator, 10 ether);
 
+        uint256 creationFee = factory.CREATION_FEE();
         vm.prank(creator);
         (address tokenAddress, address marketAddress) =
-            factory.createToken{value: factory.CREATION_FEE()}("Gas Snapshot", "GAS", "ipfs://gas-snapshot");
+            factory.createToken{value: creationFee}("Gas Snapshot", "GAS", "ipfs://gas-snapshot");
         token = LaunchToken(tokenAddress);
         market = BondingCurveMarket(payable(marketAddress));
         vm.deal(trader, 10 ether);
@@ -42,9 +43,10 @@ contract GasSnapshotTest is Test {
     }
 
     function testGas_TokenCreation() public {
+        uint256 creationFee = factory.CREATION_FEE();
         uint256 startGas = gasleft();
         vm.prank(creator);
-        factory.createToken{value: factory.CREATION_FEE()}("Gas Token", "GT", "ipfs://gas-token");
+        factory.createToken{value: creationFee}("Gas Token", "GT", "ipfs://gas-token");
         emit log_named_uint("gas.token_creation_including_token_and_market", startGas - gasleft());
     }
 
