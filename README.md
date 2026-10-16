@@ -4,6 +4,8 @@ MICOW is an independently implemented, testnet-only EVM token launchpad targetin
 
 ## Current delivery status
 
+Documentation snapshot: 2026-10-16. Current main head after PR #7 merge: `383dd1f7e2718b2b5977ec83a8fe809f1300045c`. PR #7 CI run `38837255615` and security run `38837255569` passed on its head before merge; post-merge main CI/security runs are pending. Recheck main checks before release decisions.
+
 - [x] Clean-room Git history established.
 - [x] Product scope, architecture, threat model, roadmap, build/deployment runbooks, operations, and acceptance gates documented.
 - [x] Fixed-supply ERC-20, factory, and bonding-curve implementation with fee liabilities and safety checks added.
@@ -16,16 +18,16 @@ MICOW is an independently implemented, testnet-only EVM token launchpad targetin
 - [x] PostgreSQL integration tests pass in CI: duplicate event replay, reorg rollback/replay, and API readiness/token/trade queries.
 - [x] Playwright browser smoke tests pass in CI.
 - [ ] Testnet deployment and explorer verification completed. **BLOCKED** pending protected deployer key, test ETH, and deployment-environment protection review.
-- [x] PostgreSQL atomicity, worker-recovery, and read-only on-chain reconciliation PRs merged; PR #6 merge commit is `dea1590d4579d2a4ca762c6536e815375ce8fc70`.
-- [ ] Verify post-merge main CI/security workflows for `dea1590d4579d2a4ca762c6536e815375ce8fc70`.
-- [ ] Complete process-level indexer outage/restart acceptance (PR #7 in progress).
+- [x] PostgreSQL atomicity and worker-cycle recovery are merged; PR #6 read-only reconciliation CLI is merged (merge commit `dea1590d4579d2a4ca762c6536e815375ce8fc70`).
+- [x] PR #7 process-level recovery acceptance: CI run `38837255615` passed PostgreSQL process recovery, Foundry, web/API/indexer checks, and secret scan; security run `38837255569` passed. PR #7 merged as `383dd1f7e2718b2b5977ec83a8fe809f1300045c`.
+- [ ] Verify post-merge main CI/security for `383dd1f7e2718b2b5977ec83a8fe809f1300045c`; runs `38837434400` and `38837434374` were queued at the last check.
 - [ ] Run reconciliation against an actual deployed testnet factory. **BLOCKED** until deployment prerequisites are satisfied.
 
 Never treat this repository as audited or production-ready. Mainnet deployment is out of scope until independent security review and explicit approval.
 
 ## Current phase
 
-**P4 — Indexer and API reliability.** Durable checkpoint resume, worker-cycle retry/shutdown, atomic event/projection/checkpoint persistence, and reorg rollback/replay tests are merged. A read-only on-chain reconciliation CLI is merged; live reconciliation remains pending a deployed factory. A process-level RPC outage/restart test is in PR #7; P5 local service E2E, P6 testnet deployment, and P8 recovery drills are not complete.
+**P4 — Indexer and API reliability.** Durable checkpoint resume, worker-cycle retry/shutdown, atomic event/projection/checkpoint persistence, reorg rollback/replay, read-only reconciliation CLI, and process-level simulated RPC outage/restart acceptance are merged. PR #7 passed CI/security on its head before merge; post-merge main CI/security verification is pending. Live reconciliation remains blocked until a testnet factory is deployed. P5 local service E2E, P6 testnet deployment, and P8 recovery drills remain incomplete.
 
 ## Stack
 
@@ -52,6 +54,8 @@ Robinhood Chain Testnet: chain ID 46630, native gas asset ETH, public RPC https:
 8. docs/OPERATIONS.md — backup, recovery, incident, and rollback procedures.
 9. docs/SECURITY-GATES.md — CI and security requirements.
 10. docs/ACCEPTANCE.md — acceptance tests.
+11. docs/FEE_CONFIGURATION.md — proposed configurable fee architecture and gates.
+12. docs/DECISIONS.md — architecture decisions, including fee configuration status.
 
 ## Toolchain
 

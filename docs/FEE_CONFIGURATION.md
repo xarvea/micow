@@ -1,75 +1,69 @@
 # MICOW Fee Configuration
 
-Status: **proposed architecture / not implemented**. This document records the approved direction for configurable fees; it does not claim that deployed contracts support these controls.
+Status: **fee policy decided; controller not implemented**. The source audit below describes the current code. The policy in this document supersedes the old 100 bps + 100 bps target for future implementation, but does not change deployed code.
 
-## Decision
+## Contract audit — current source baseline
 
-MICOW fee values must not depend on runtime `.env` files. Smart contracts cannot read environment variables. Environment variables may supply deployment-time defaults, but changing them after deployment does not change on-chain state.
+Reviewed `contracts/src/LaunchpadFactory.sol`, `contracts/src/BondingCurveMarket.sol`, `contracts/script/DeployTestnet.s.sol`, and the corresponding Foundry tests.
 
-Use an on-chain fee configuration controller as the source of truth. Factory, bonding-curve contracts, and any DEX hook must read the applicable on-chain configuration. Fees may be changed without redeployment only where the existing deployed contracts were explicitly designed to read that configuration.
+- `LaunchpadFactory` has an immutable, non-zero `protocolFeeRecipient`; `createToken` is non-payable and charges no creation fee.
+- The factory deploys a new `BondingCurveMarket` for every token and passes the creator and treasury recipient into its constructor.
+- `BondingCurveMarket` is explicitly non-upgradeable. It stores immutable per-market `protocolFeeBps` and `creatorFeeBps`, currently 100 bps each, with a 500 bps combined hard cap.
+- Buy fees are calculated on gross `msg.value`; sell fees are calculated on gross curve proceeds before fee deductions. Each fee component currently rounds down independently.
+- ETH accounting separates `realEthReserve` from `totalClaimableFees`; fee withdrawal is pull-based and guarded by `nonReentrant`.
+- No creation fee, graduation flow/fee, fee controller, Uniswap v4 integration, or DEX fee collection exists in the audited source.
+- Therefore, changing `.env` or adding a controller alone cannot change current markets. The factory/market construction and fee reads must be changed and deployed together; no existing deployment is assumed.
 
-Do not add proxy upgradeability solely to change fee values. First audit the current contracts and select the smallest safe architecture compatible with their deployment model.
+## Finalized fee policy for implementation
 
-## Initial fee schedule
+All values are policy targets, **not active contract behavior**.
 
-All values below are the product's requested initial configuration, pending implementation and tests.
-
-| Fee | Initial value | Recipient / allocation |
+| Fee | Target | Basis / allocation |
 | --- | ---: | --- |
-| Token creation | 0.0006 ETH | 100% treasury |
-| Graduation | 0.0006 ETH | 100% treasury |
-| Bonding-curve buy | 130 bps (1.30%) | 30 bps creator + 100 bps treasury |
-| Bonding-curve sell | 130 bps (1.30%) | 30 bps creator + 100 bps treasury |
-| Uniswap pool buy | 130 bps (1.30%) | 30 bps creator + 100 bps treasury |
-| Uniswap pool sell | 130 bps (1.30%) | 30 bps creator + 100 bps treasury |
+| Token creation | 0.0006 ETH | Fixed fee, 100% treasury |
+| Graduation | 0.0006 ETH | Fixed fee, 100% treasury; inactive until graduation is implemented |
+| Bonding-curve buy | 130 bps (1.30%) | Gross ETH input; 100 bps treasury + 30 bps creator |
+| Bonding-curve sell | 130 bps (1.30%) | Gross curve proceeds before fee deduction; 100 bps treasury + 30 bps creator |
+| Uniswap pool buy/sell | **Out of scope / undecided** | No fee charged or advertised until target-chain deployment and collection mechanism are verified |
 
-Use integer basis points for rates and wei for ETH-denominated fixed fees. The fee basis must be explicitly defined in contract documentation and tests. Proposed basis: gross ETH input for buys and gross sell proceeds before fee deductions. Verify that this definition matches each execution path and does not double-charge users.
+### Rounding and allocation
 
-## Configuration and authority
+- Use integer wei and basis points; no floating-point fee math.
+- Calculate total trading fee as `floor(grossAmount * 130 / 10_000)`.
+- Calculate treasury allocation as `floor(grossAmount * 100 / 10_000)`; creator allocation is the remainder of the total fee. This ensures the two allocations sum exactly to the charged total, with sub-wei rounding dust assigned to the creator allocation.
+- Buy fees use the gross ETH supplied by the trader. Curve pricing uses net ETH after fees.
+- Sell fees use the gross ETH proceeds returned by the curve calculation before fee deductions. The trader receives gross proceeds less the total fee.
+- Creation/graduation fixed fees are exact wei amounts. Calls below or above the configured fee must revert; do not silently refund or retain overpayment.
+- Accrued creator and treasury liabilities are not retroactively changed by future fee configuration updates.
 
-- Store active fee parameters on-chain; frontend/API configuration is read-only presentation data, not the authority for charging fees.
-- Deployment scripts may read `MICOW_CREATION_FEE_WEI`, `MICOW_GRADUATION_FEE_WEI`, and fee-bps variables to initialize contract state. Never commit secrets to environment files.
-- Use a dedicated fee-admin role with least privilege. Prefer a treasury Safe multisig as the authority, with a timelock for changes where compatible with the product's operational needs.
-- Enforce hard-coded maximums in contract code. Validate that creator and treasury allocations sum to the configured total fee and that no rate exceeds its maximum.
-- Emit events for every successful fee configuration change, including old/new values or an auditable equivalent.
-- Define whether existing tokens inherit live global rates or snapshot rates at creation. This must be an explicit product decision; never let this behavior emerge accidentally from implementation.
-- Fee updates must not retroactively alter already accrued creator balances or treasury liabilities.
-- Failed configuration updates must revert atomically.
+## Controller behavior and safety policy
 
-## Uniswap v4 constraint
+1. **Single global live configuration.** All markets read the current on-chain controller at execution time. A successful fee change therefore applies to existing and newly created markets. This satisfies the requirement to adjust fees without redeploying each market. The UI must clearly disclose that updates affect all markets.
+2. **No proxy upgrades.** Use a separately deployed controller referenced immutably by the factory and each market. This only works for markets deployed with controller support; it cannot retrofit current immutable markets.
+3. **Hard bounds:** combined trading fee must never exceed 500 bps; creation and graduation fee must never exceed 0.01 ETH each. Initial values are 130 bps and 0.0006 ETH respectively.
+4. **Delayed updates:** fee changes must be queued and become executable only after a fixed 24-hour delay. Cancellation must be possible before execution. Emit auditable events for queue, cancellation, and execution.
+5. **Authority:** controller admin is a dedicated non-zero address, separate from the fee recipient. Ownership/authority transfer must be two-step. The controller must not expose reserve withdrawals, token recovery, or arbitrary user-balance mutation. Mainnet governance remains subject to a separate ADR and explicit approval; no Safe threshold is adopted here.
+6. **Recipient policy:** treasury recipient and each token's creator are immutable identities. The controller changes fee amounts/rates, not payout destinations.
+7. **Atomic accounting:** fixed fees are credited to treasury accounting exactly once; curve fees are pull-based liabilities. Fee liabilities must never be funded from curve reserves or from other users' liabilities.
+8. **Configuration reads:** each buy/sell snapshots one configuration result within that transaction. A revert leaves no partial fee/configuration accounting.
+9. **Environment variables:** deployment scripts may read variables to initialize the first configuration. Runtime environment values are never authoritative and cannot mutate on-chain state.
+10. **Migration:** do not claim existing markets are configurable. Deploying a new controller does not modify existing immutable markets; testnet deployment must use the new factory/market/controller bundle.
 
-A MICOW configuration change does not automatically change a Uniswap v4 pool's fee behavior. Confirm the target chain's deployed Uniswap v4 contracts and the selected pool/hook design first. The proposed 30 bps creator and 100 bps treasury split must be proven to accrue and be withdrawable through the chosen mechanism. Standard LP fees, hook fees, and MICOW treasury revenue are distinct accounting flows.
+## Graduation and DEX boundary
 
-Do not advertise the DEX fee schedule as active until testnet integration proves collection, allocation, and withdrawal end to end.
+Graduation fee collection remains inactive until a graduation transaction exists and has an atomic, tested success/failure path. A failed graduation must not collect a fee or leave partial liquidity/custody state.
+
+Uniswap v4 is not included in the finalized active fee policy. Before adding it, verify target-chain PoolManager/PositionManager addresses, code/ABI, selected hook and permissions, pool initialization, liquidity custody, failure/recovery, and end-to-end fee allocation/withdrawal. Standard LP fees, hook fees, and MICOW treasury revenue are distinct accounting flows. Do not advertise a 130 bps DEX fee until it is independently validated.
 
 ## Required implementation and acceptance gates
 
-1. Audit the existing factory, bonding curve, graduation flow, treasury, and any DEX integration before changing code.
-2. Implement fixed creation/graduation fees with exact payment validation, treasury accounting, and atomic rollback on failure.
-3. Implement 130 bps bonding-curve buy/sell fees with 30 bps creator and 100 bps treasury allocations.
-4. Verify Uniswap v4 deployment and implement/validate the selected hook or other supported fee-collection mechanism.
-5. Add unit, fuzz, invariant, integration, and buy/sell/graduation accounting tests.
-6. Update frontend fee previews and documentation from the on-chain configuration.
-7. Require all CI/security checks, reconciliation of accounting, and testnet acceptance evidence before deployment.
-
-### Mandatory invariants
-
-- Total trading fee equals creator allocation plus treasury allocation.
-- Fee calculations use integer arithmetic and a documented rounding policy.
-- Creator claims and treasury withdrawals cannot spend bonding-curve reserves or other user liabilities.
-- A failed buy, sell, creation, graduation, or fee update leaves no partial accounting state.
-- Every fixed fee is credited exactly once.
-- Emitted configuration and fee-accounting events reconcile with stored balances.
-- No DEX fee is treated as treasury revenue until the selected hook/pool mechanism actually collects it.
-
-## Status tracking
-
-- [ ] Existing contracts and deployment model audited.
-- [ ] Fee bounds, authority, timelock, and global-vs-per-token behavior finalized.
-- [ ] Fixed fees implemented and tested.
-- [ ] Bonding-curve fees implemented and tested.
-- [ ] Uniswap v4 mechanism validated on the target testnet.
-- [ ] Frontend and documentation aligned with on-chain values.
-- [ ] CI, security review, and testnet acceptance gates passed.
+- [ ] Implement controller and factory/market integration according to this policy.
+- [ ] Test exact creation fee, over/underpayment revert, treasury accrual and withdrawal.
+- [ ] Test fixed graduation fee only after graduation flow is implemented.
+- [ ] Add unit, fuzz, invariant and integration tests for 130 bps curve fees, rounding, recipient split, liabilities, and reverts.
+- [ ] Test 24-hour delay, cancellation, authority transfer, hard bounds, and global updates across existing markets.
+- [ ] Test front-end fee previews against on-chain controller reads.
+- [ ] Independent contract/economic review and all CI/security checks pass.
+- [ ] Testnet-only deployment dry-run, post-deployment reconciliation and accounting evidence reviewed before any broadcast.
 
 Mainnet deployment remains out of scope without independent review and explicit approval.
