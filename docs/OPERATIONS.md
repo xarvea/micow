@@ -19,7 +19,7 @@ Restore into a newly created database first; never overwrite the only copy of a 
 2. Confirm endpoint chain ID is still 46630.
 3. Check provider health/rate limits and switch to a reviewed testnet RPC endpoint if needed.
 4. Let the indexer retry; failed transactions do not commit their block checkpoint.
-5. After recovery, compare indexed-through block to chain head minus confirmations and run reconciliation.
+5. After recovery, compare indexed-through block to chain head minus confirmations and run the read-only reconciliation command below.
 
 ## Reorg or inconsistent index
 1. Preserve logs and current database backup.
@@ -43,3 +43,14 @@ Restore into a newly created database first; never overwrite the only copy of a 
 
 ## Rollback boundaries
 Application/API/indexer deployments can be rolled back to a known image/commit after database compatibility is checked. On-chain contract deployments are immutable; a bad testnet deployment requires a new address and an updated deployment manifest. Never claim an on-chain deployment was rolled back unless chain state proves it.
+
+
+## On-chain/read-model reconciliation
+
+Run this after an indexer recovery, database restore, or before a testnet release:
+
+```bash
+pnpm --filter @micow/indexer reconcile
+```
+
+The command requires `RH_TESTNET_RPC_URL`, `DATABASE_URL`, and `LAUNCHPAD_FACTORY_ADDRESS` to identify the intended testnet RPC, database, and deployed factory. It verifies chain ID 46630 and compares indexed token/event projections against the factory registry and market token getter. It is read-only and exits non-zero on detected drift or RPC verification failure. Do not treat a skipped or failed run as clean. Live reconciliation is not yet complete until a deployed factory is available and a report is recorded.

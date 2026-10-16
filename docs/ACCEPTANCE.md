@@ -1,6 +1,6 @@
 # Acceptance Criteria and Phase Gates
 
-The foundation, reliability hardening, and atomic indexer persistence phases are merged. CI passed on the latest main commit. The current phase adds durable checkpoint resume and worker-cycle recovery tests. Actual deployment remains blocked until a protected testnet key and test ETH are available.
+Status as of 2026-10-16: P4 — Indexer and API reliability. Foundation, RPC/API hardening, atomic persistence, and worker restart recovery are merged. CI and security workflows passed on main commit `efa07a522e788c949cd0e67fb274d68db5eab085`. PR #6 adds a read-only reconciliation CLI; its CI/security workflows passed on head `4e929a5558874053cc7371ba973f8baeeb276cf0` at last check, but it is not yet merged. Live reconciliation and deployment remain blocked until a factory is deployed using approved testnet-only credentials and test ETH.
 
 ## F0 — Foundation and specification
 
@@ -59,10 +59,11 @@ The foundation, reliability hardening, and atomic indexer persistence phases are
 ## D1 — Testnet deployment
 
 - [x] Deployment script rejects chain IDs other than 46630.
-- [x] Main-branch CI preflight checks the RPC chain ID and simulates deployment without broadcasting (execution pending after merge).
+- [x] Main-branch CI preflight checks the RPC chain ID and simulates deployment without broadcasting; CI passed on the latest main commit.
 - [x] Manual deployment workflow requires explicit `broadcast=true` and uses the `robinhood-testnet` environment.
 - [ ] Configure environment required reviewers, protected deployer secret, RPC variable, and fee recipient.
-- [ ] Run the main-branch RPC/deployment simulation and inspect gas output.
+- [x] Main-branch RPC/deployment simulation CI job completed successfully.
+- [ ] Review and record simulated deployment gas output.
 - [ ] Broadcast factory deployment and record address, transaction/block hashes, compiler/settings. **BLOCKED:** no protected deployer key or test ETH is available.
 - [ ] Verify source/metadata on explorer where supported.
 - [ ] Smoke-test create, buy, sell, fee withdrawal, API, and indexer.

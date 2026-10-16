@@ -74,8 +74,9 @@ Status values: PENDING, IN_PROGRESS, BLOCKED, COMPLETED, NOT_VERIFIED. A checked
 ## P6 — Testnet
 - [x] Add deployment script that asserts chain ID 46630.
 - [x] Add manual deployment workflow with broadcast disabled by default and protected environment.
-- [x] Add main-branch testnet RPC and non-broadcast deployment preflight job (execution pending after merge).
-- [ ] Run the main-branch testnet RPC/deployment simulation and inspect gas output.
+- [x] Add main-branch testnet RPC and non-broadcast deployment preflight job.
+- [x] Verify main-branch testnet RPC/deployment simulation CI passed on `efa07a522e788c949cd0e67fb274d68db5eab085`.
+- [ ] Review deployment simulation gas output and record the reviewed result.
 - [ ] Deploy factory only after contract gates pass. **BLOCKED:** no deployer key or test ETH is available in the execution environment.
 - [ ] Record chain ID, addresses, tx hashes, block numbers, compiler/settings.
 - [ ] Verify contracts on explorer where supported.
