@@ -41,8 +41,9 @@ contract LaunchpadInvariantTest is StdInvariant, Test {
 
     function setUp() public {
         LaunchpadFactory factory = new LaunchpadFactory(makeAddr("protocol"));
+        vm.deal(address(this), 1 ether);
         (address tokenAddress, address marketAddress) =
-            factory.createToken("Micow Invariant", "MCWI", "ipfs://invariant");
+            factory.createToken{value: factory.CREATION_FEE()}("Micow Invariant", "MCWI", "ipfs://invariant");
         token = LaunchToken(tokenAddress);
         market = BondingCurveMarket(payable(marketAddress));
         handler = new MarketHandler(token, market);
