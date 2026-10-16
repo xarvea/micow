@@ -23,7 +23,7 @@ cleanup() {
   for pid in "$WEB_PID" "$INDEXER_PID" "$API_PID" "$API_PROBE_PID" "$ANVIL_PID"; do
     if [[ -n "$pid" ]]; then kill "$pid" 2>/dev/null || true; fi
   done
-  for pid in "$WEB_PID" "$INDEXER_PID" "$API_PID" "$ANVIL_PID"; do
+  for pid in "$WEB_PID" "$INDEXER_PID" "$API_PID" "$API_PROBE_PID" "$ANVIL_PID"; do
     if [[ -n "$pid" ]]; then wait "$pid" 2>/dev/null || true; fi
   done
 }
