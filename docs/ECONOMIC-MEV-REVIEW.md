@@ -32,7 +32,7 @@ These invariants assume ordinary EVM transaction atomicity and the current fixed
 | ECON-04 | Low — bounded by inventory/reserves | There is no explicit per-transaction amount cap. Buys revert if calculated output exceeds the real token inventory; sells revert if gross ETH output exceeds the real ETH reserve. Very large requests may therefore fail rather than execute partially. | Existing inventory/reserve checks remain the hard bounds. Consider a separate max-trade policy only if product requirements demand one; it is not added by this review. |
 | ECON-05 | Informational | Forced ETH creates a balance surplus that the contracts do not recover or assign to treasury liabilities. | Intentional accounting policy. Reconciliation/monitoring must distinguish raw balance from tracked reserves and liabilities. |
 | ECON-06 | Informational | If creator and protocol fee recipient are the same address, both fee components accrue to the same mapping entry. | Regression test asserts the combined liability is counted once in the total-liability sum per accrued wei, with no double-counted balance obligation. |
-| ECON-07 | Informational | Failed market fee withdrawal must not erase a claim; failed treasury withdrawal must not erase the treasury liability. | Market rejection path is covered by the economic regression tests; retain/verify the factory rejection regression in the factory test suite. |
+| ECON-07 | Informational | Failed market fee withdrawal must not erase a claim; failed treasury withdrawal must not erase the treasury liability. | Market rejection path is covered by the economic regression tests; the existing factory tests cover a rejecting treasury and preservation of its liability. |
 
 ## Test evidence
 
