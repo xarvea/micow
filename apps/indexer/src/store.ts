@@ -28,6 +28,19 @@ export async function inTransaction<T>(db: PoolClient, operation: () => Promise<
   }
 }
 
+export async function getNextBlock(
+  pool: Pick<Pool, "query">,
+  chainId: number,
+  startBlock: bigint,
+): Promise<bigint> {
+  const result = await pool.query(
+    "SELECT MAX(block_number)::text AS block_number FROM indexed_blocks WHERE chain_id = $1",
+    [chainId],
+  );
+  const lastBlock = result.rows[0]?.block_number as string | null | undefined;
+  return lastBlock === null || lastBlock === undefined ? startBlock : BigInt(lastBlock) + 1n;
+}
+
 function serialize(value: unknown): string {
   return JSON.stringify(value, (_key, item: unknown) => typeof item === "bigint" ? item.toString() : item) ?? "null";
 }

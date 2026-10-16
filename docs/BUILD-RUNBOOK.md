@@ -78,3 +78,13 @@ The indexer uses a shared transaction helper for per-block persistence and reorg
     pnpm --filter @micow/indexer test:integration
 
 This test must run only against an isolated test database, never a shared or production database.
+
+
+## Indexer restart and RPC recovery checks
+
+The indexer derives its next block from the highest durable checkpoint, so restarting after a committed block resumes at the following block rather than replaying the entire chain. The worker supervisor catches cycle-level errors, reports them, and retries after the configured interval while preserving shutdown behavior.
+
+    pnpm --filter @micow/indexer test
+    pnpm --filter @micow/indexer test:integration
+
+The integration test requires an isolated PostgreSQL database via `TEST_DATABASE_URL`. These automated tests do not replace a process-level outage drill against a deliberately unavailable/recovering RPC endpoint.
