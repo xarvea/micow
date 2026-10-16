@@ -8,6 +8,33 @@ LOCAL_RPC="${LOCAL_RPC_URL:-http://127.0.0.1:8545}"
 DATABASE_URL="${DATABASE_URL:-postgresql://micow:micow@127.0.0.1:5432/micow}"
 API_URL="${API_URL:-http://127.0.0.1:4000}"
 WEB_URL="${WEB_URL:-http://127.0.0.1:3000}"
+
+# This E2E is local-only: fail closed before starting processes or broadcasting.
+LOCAL_RPC="$LOCAL_RPC" DATABASE_URL="$DATABASE_URL" API_URL="$API_URL" WEB_URL="$WEB_URL" node --input-type=module <<'NODE'
+import { URL } from "node:url";
+
+const loopback = new Set(["127.0.0.1", "localhost", "::1"]);
+function localHttp(name, raw, expectedPort) {
+  let url;
+  try { url = new URL(raw); } catch { throw new Error(name + " must be a valid URL"); }
+  if (url.protocol !== "http:" || !loopback.has(url.hostname) ||
+      url.port !== String(expectedPort) || url.username || url.password) {
+    throw new Error(name + " must use HTTP loopback on port " + expectedPort);
+  }
+}
+let db;
+try { db = new URL(process.env.DATABASE_URL); } catch {
+  throw new Error("DATABASE_URL must be a valid PostgreSQL URL");
+}
+if (!["postgres:", "postgresql:"].includes(db.protocol) ||
+    !loopback.has(db.hostname) || (db.port && db.port !== "5432")) {
+  throw new Error("DATABASE_URL must point to a local PostgreSQL instance on port 5432");
+}
+localHttp("LOCAL_RPC_URL", process.env.LOCAL_RPC, 8545);
+localHttp("API_URL", process.env.API_URL, 4000);
+localHttp("WEB_URL", process.env.WEB_URL, 3000);
+NODE
+
 ANVIL_KEY=""
 LOCAL_ADDRESS="0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266"
 LOG_DIR="${TMPDIR:-/tmp}/micow-p5-e2e"
