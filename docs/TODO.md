@@ -60,7 +60,8 @@ Status values: PENDING, IN_PROGRESS, BLOCKED, COMPLETED, NOT_VERIFIED. A checked
 - [x] Extract and test the worker cycle supervisor; verify it resumes after a transient cycle failure and stops cleanly.
 - [x] Add PostgreSQL integration coverage proving a restarted indexer resumes at MAX(checkpoint) + 1.
 - [ ] Add full process-level worker restart/RPC outage end-to-end tests.
-- [ ] Add RPC-to-contract-state reconciliation.
+- [x] Add a read-only reconciliation CLI comparing token projections with TokenCreated events, factory registry mappings, and market token getters.
+- [ ] Run reconciliation against a deployed testnet factory and verify controlled drift detection.
 
 ## P5 — Local integration
 - [x] Add Docker Compose for PostgreSQL.

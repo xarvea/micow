@@ -52,7 +52,9 @@ The foundation, reliability hardening, and atomic indexer persistence phases are
 - [x] PostgreSQL failure-injection test proves event and checkpoint writes roll back atomically when projection validation fails.
 - [x] Unit test verifies the worker continues after a transient cycle failure and exits cleanly on shutdown.
 - [x] PostgreSQL integration test verifies restart resumes from the first block after the last durable checkpoint.
-- [ ] Full process-level worker restart/RPC outage end-to-end test and RPC-to-contract-state reconciliation.
+- [ ] Full process-level worker restart/RPC outage end-to-end test.
+- [x] Add a read-only reconciliation CLI for database projection and on-chain factory/market consistency.
+- [ ] Run reconciliation against a deployed testnet factory and verify controlled drift detection.
 
 ## D1 — Testnet deployment
 

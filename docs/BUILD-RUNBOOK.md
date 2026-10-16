@@ -88,3 +88,12 @@ The indexer derives its next block from the highest durable checkpoint, so resta
     pnpm --filter @micow/indexer test:integration
 
 The integration test requires an isolated PostgreSQL database via `TEST_DATABASE_URL`. These automated tests do not replace a process-level outage drill against a deliberately unavailable/recovering RPC endpoint.
+
+
+## Read-only on-chain reconciliation
+
+Set `RH_TESTNET_RPC_URL`, `DATABASE_URL`, and `LAUNCHPAD_FACTORY_ADDRESS` for the deployed Robinhood Chain Testnet factory, then run:
+
+    pnpm --filter @micow/indexer reconcile
+
+The command checks chain ID 46630, compares indexed TokenCreated events with token projections, and verifies each indexed token against `LaunchpadFactory.marketForToken(token)` and `BondingCurveMarket.token()`. It pages token rows in batches of 100, retries transient RPC reads, prints a JSON report, and exits non-zero if drift is found or verification cannot complete. It is read-only and does not repair database state or submit transactions. Run it only against the intended testnet factory and database.
