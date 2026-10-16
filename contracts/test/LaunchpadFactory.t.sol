@@ -21,7 +21,7 @@ contract LaunchpadFactoryTest is Test {
     function testCreateTokenHasFixedSupplyAndDedicatedMarket() public {
         vm.prank(creator);
         (address tokenAddress, address marketAddress) =
-            factory.createToken{value: factory.CREATION_FEE()}("Micow Test", "MCWT", "ipfs://example-metadata");
+            factory.createToken{value: 0.0006 ether}("Micow Test", "MCWT", "ipfs://example-metadata");
 
         LaunchToken token = LaunchToken(tokenAddress);
         BondingCurveMarket market = BondingCurveMarket(payable(marketAddress));
@@ -48,7 +48,7 @@ contract LaunchpadFactoryTest is Test {
             )
         );
         vm.prank(creator);
-        factory.createToken{value: factory.CREATION_FEE() + 1}("Micow Test", "MCWT", "ipfs://example-metadata");
+        factory.createToken{value: 0.0006 ether + 1}("Micow Test", "MCWT", "ipfs://example-metadata");
     }
 
     function testCreationFeeAccruesAndTreasuryCanWithdraw() public {
@@ -76,7 +76,7 @@ contract LaunchpadFactoryTest is Test {
         factory.withdrawTreasuryFees();
     }
 
-    function testFailedCreationDoesNotAccrueFee() public {
+    function testCreationFailureDoesNotAccrueFee() public {
         vm.expectRevert(LaunchpadFactory.EmptyNameOrSymbol.selector);
         vm.prank(creator);
         factory.createToken{value: factory.CREATION_FEE()}("", "MCWT", "ipfs://example-metadata");
