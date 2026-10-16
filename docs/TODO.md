@@ -1,6 +1,6 @@
 # MICOW Master TODO
 
-Status snapshot 2026-10-16: current `main` is `8b7ab0689e4534f63ccd5dd9fce61799cf89c0cc` (PR #11 merged). Main CI `38875916343` and security `38875916097` passed, including chain-ID 46630 verification and non-broadcast deployment simulation. No deployment transaction was broadcast.
+Status snapshot 2026-10-16: current `main` is `8b7ab0689e4534f63ccd5dd9fce61799cf89c0cc` (PR #11 merged). Main CI `38875916343` and security `38875916097` passed on contract baseline `7baf9838164f9817ca3c880a1096aa3f6d056435`, including chain-ID 46630 verification and non-broadcast deployment simulation. Main documentation head is now `8b7ab0689e4534f63ccd5dd9fce61799cf89c0cc`. No deployment transaction was broadcast.
 
 Status values: PENDING, IN_PROGRESS, BLOCKED, COMPLETED, NOT_VERIFIED. A checked implementation task is not a claim that its acceptance tests passed.
 
@@ -81,7 +81,7 @@ Status values: PENDING, IN_PROGRESS, BLOCKED, COMPLETED, NOT_VERIFIED. A checked
 - [x] Add deployment script that asserts chain ID 46630.
 - [x] Add manual deployment workflow with broadcast disabled by default and protected environment.
 - [x] Add main-branch testnet RPC and non-broadcast deployment preflight job.
-- [x] Verify post-merge main CI/security for `8b7ab0689e4534f63ccd5dd9fce61799cf89c0cc`: CI `38875916343` and security `38875916097` passed. RPC chain-ID 46630 and non-broadcast deployment simulation passed; no deployment or broadcast was performed.
+- [x] Latest verified contract CI/security passed on `7baf9838164f9817ca3c880a1096aa3f6d056435`: CI `38875916343` and security `38875916097` passed. Docs-only main head is `8b7ab0689e4534f63ccd5dd9fce61799cf89c0cc`; post-merge CI for the docs commit has not been observed. RPC chain-ID 46630 and non-broadcast deployment simulation passed; no deployment or broadcast was performed.
 - [ ] Review deployment simulation gas output and record the reviewed result.
 - [ ] Deploy factory only after contract gates pass. **BLOCKED:** no deployer key or test ETH is available in the execution environment.
 - [ ] Record chain ID, addresses, tx hashes, block numbers, compiler/settings.
