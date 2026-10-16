@@ -4,7 +4,6 @@ import { setTimeout as delay } from "node:timers/promises";
 import { Pool } from "pg";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { readFile } from "node:fs/promises";
-import { resolve } from "node:path";
 
 const databaseUrl = process.env.TEST_DATABASE_URL;
 const integrationDescribe = describe.skipIf(!databaseUrl);
@@ -134,7 +133,7 @@ integrationDescribe("indexer process recovery", () => {
 
   function startIndexer(): { child: ChildProcess; output: () => string } {
     let logs = "";
-    const child = spawn(process.execPath, [resolve(process.cwd(), "../../node_modules/tsx/dist/cli.mjs"), "src/main.ts"], {
+    const child = spawn(process.execPath, ["--import", "tsx", "src/main.ts"], {
       cwd: process.cwd(),
       env: {
         ...process.env,
@@ -173,7 +172,12 @@ integrationDescribe("indexer process recovery", () => {
   it("recovers from an RPC outage, commits a durable checkpoint, and resumes after a real process restart", async () => {
     const first = startIndexer();
 
-    await waitFor(() => rpcRequests > 0, "the initial RPC outage to be observed");
+    await waitFor(() => {
+      if (first.child.exitCode !== null || first.child.signalCode !== null) {
+        throw new Error("Indexer exited before the initial RPC request. Output:\\n" + first.output());
+      }
+      return rpcRequests > 0;
+    }, "the initial RPC outage to be observed");
     await delay(150);
     expect(rpcRequests).toBeGreaterThan(0);
     rpcHealthy = true;
