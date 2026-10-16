@@ -1,6 +1,6 @@
 # Acceptance Criteria and Phase Gates
 
-Status as of 2026-10-16: P8 testnet launch-readiness hardening, testnet-only. PR #28 merged as `02c314518e64318e6a88a4c76f52daf1fcfa2a5b`; its PR CI `38936723431` and security `38936723423` passed. Post-merge main CI `38940734418` and security `38940734236` were still running when this snapshot was prepared; verify final conclusions before release sign-off. No deployment transaction or public-chain broadcast was performed. Live reconciliation/deployment remain blocked pending approved testnet-only credentials, test ETH, reviewed treasury recipient, and protected-environment reviewer verification.
+Status as of 2026-10-16: P8 testnet launch-readiness hardening, testnet-only. PR #28 merged as `02c314518e64318e6a88a4c76f52daf1fcfa2a5b`; its PR CI `38936723431` and security `38936723423` passed. Post-merge main CI `38940734418` and security `38940734236` passed on that exact SHA. No deployment transaction or public-chain broadcast was performed. Live reconciliation/deployment remain blocked pending approved testnet-only credentials, test ETH, reviewed treasury recipient, and protected-environment reviewer verification.
 
 ## F0 — Foundation and specification
 
