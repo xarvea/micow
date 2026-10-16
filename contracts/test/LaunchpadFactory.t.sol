@@ -36,11 +36,17 @@ contract LaunchpadFactoryTest is Test {
     }
 
     function testCreationFeeMustBeExact() public {
-        vm.expectRevert(abi.encodeWithSelector(LaunchpadFactory.IncorrectCreationFee.selector, factory.CREATION_FEE(), 0));
+        vm.expectRevert(
+            abi.encodeWithSelector(LaunchpadFactory.IncorrectCreationFee.selector, factory.CREATION_FEE(), 0)
+        );
         vm.prank(creator);
         factory.createToken("Micow Test", "MCWT", "ipfs://example-metadata");
 
-        vm.expectRevert(abi.encodeWithSelector(LaunchpadFactory.IncorrectCreationFee.selector, factory.CREATION_FEE(), factory.CREATION_FEE() + 1));
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                LaunchpadFactory.IncorrectCreationFee.selector, factory.CREATION_FEE(), factory.CREATION_FEE() + 1
+            )
+        );
         vm.prank(creator);
         factory.createToken{value: factory.CREATION_FEE() + 1}("Micow Test", "MCWT", "ipfs://example-metadata");
     }
