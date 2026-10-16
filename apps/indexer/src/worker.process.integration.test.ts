@@ -181,6 +181,13 @@ integrationDescribe("indexer process recovery", () => {
     await delay(150);
     expect(rpcRequests).toBeGreaterThan(0);
     rpcHealthy = true;
+    await waitFor(async () => {
+      const result = await pool.query(
+        "SELECT block_number::text FROM indexed_blocks WHERE chain_id = $1 ORDER BY block_number DESC LIMIT 1",
+        [46630],
+      );
+      return result.rows[0]?.block_number === "10";
+    }, "the first process to persist block 10");
 
     // Prove a previously healthy worker does not advance its durable checkpoint
     // when the provider fails during a later indexing cycle.
