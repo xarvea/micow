@@ -21,7 +21,8 @@ Status as of 2026-10-16: P4 — Indexer and API reliability. Current main snapsh
 - [x] Reentrancy protection covers state-changing ETH/token flows.
 - [x] No privileged reserve drain or arbitrary user balance mutation exists.
 - [x] Compiler build and bytecode-size report pass.
-- [x] Add forced-ETH accounting regression test (PR #14 merged and documented); forced ETH remains surplus, not a recoverable liability.\n- [ ] Complete independent contract/economic review and record reproducible findings.
+- [x] Add forced-ETH accounting regression test (PR #14 merged and documented); forced ETH remains surplus, not a recoverable liability.
+- [ ] Complete independent contract/economic review and record reproducible findings.
 
 ## T1 — Contract tests
 
