@@ -4,7 +4,7 @@ MICOW is an independently implemented, testnet-only EVM token launchpad targetin
 
 ## Current delivery status
 
-Documentation snapshot: 2026-10-16. Current main head after PR #7 merge: `383dd1f7e2718b2b5977ec83a8fe809f1300045c`. PR #7 CI run `38837255615` and security run `38837255569` passed on its head before merge; post-merge main CI/security runs are pending. Recheck main checks before release decisions.
+Documentation snapshot: 2026-10-16. Current main head: `61f4fe5a7041d403716768e867ab7674c463a94c` (PR #9 merged). Post-merge CI `38837722074` and security `38837722123` passed. Deployment simulation is intentionally skipped on PR workflows; no deployment or broadcast was performed.
 
 - [x] Clean-room Git history established.
 - [x] Product scope, architecture, threat model, roadmap, build/deployment runbooks, operations, and acceptance gates documented.

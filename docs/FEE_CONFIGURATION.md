@@ -34,6 +34,7 @@ All values are policy targets, **not active contract behavior**.
 - Buy fees use the gross ETH supplied by the trader. Curve pricing uses net ETH after fees.
 - Sell fees use the gross ETH proceeds returned by the curve calculation before fee deductions. The trader receives gross proceeds less the total fee.
 - Creation/graduation fixed fees are exact wei amounts. Calls below or above the configured fee must revert; do not silently refund or retain overpayment.
+- **Fixed-fee custody:** `LaunchpadFactory` records creation fees as a treasury-only pull liability (`claimableTreasuryFees` + `totalClaimableTreasuryFees`) and exposes a guarded treasury withdrawal. Do not forward ETH to the treasury during `createToken`; a rejecting recipient must not block token creation. Fee accounting and token/market deployment must revert atomically on failure. Graduation fees, when graduation exists, use the same pull-liability principle in the contract that executes graduation.
 - Accrued creator and treasury liabilities are not retroactively changed by future fee configuration updates.
 
 ## Controller behavior and safety policy
@@ -44,7 +45,7 @@ All values are policy targets, **not active contract behavior**.
 4. **Delayed updates:** fee changes must be queued and become executable only after a fixed 24-hour delay. Cancellation must be possible before execution. Emit auditable events for queue, cancellation, and execution.
 5. **Authority:** controller admin is a dedicated non-zero address, separate from the fee recipient. Ownership/authority transfer must be two-step. The controller must not expose reserve withdrawals, token recovery, or arbitrary user-balance mutation. Mainnet governance remains subject to a separate ADR and explicit approval; no Safe threshold is adopted here.
 6. **Recipient policy:** treasury recipient and each token's creator are immutable identities. The controller changes fee amounts/rates, not payout destinations.
-7. **Atomic accounting:** fixed fees are credited to treasury accounting exactly once; curve fees are pull-based liabilities. Fee liabilities must never be funded from curve reserves or from other users' liabilities.
+7. **Atomic accounting:** fixed fees accrue to a treasury-only pull liability in the factory; curve fees remain pull-based liabilities in each market. Neither path calls the treasury recipient during trade/token creation. Fee liabilities must never be funded from curve reserves or from other users' liabilities.
 8. **Configuration reads:** each buy/sell snapshots one configuration result within that transaction. A revert leaves no partial fee/configuration accounting.
 9. **Environment variables:** deployment scripts may read variables to initialize the first configuration. Runtime environment values are never authoritative and cannot mutate on-chain state.
 10. **Migration:** do not claim existing markets are configurable. Deploying a new controller does not modify existing immutable markets; testnet deployment must use the new factory/market/controller bundle.
@@ -58,7 +59,7 @@ Uniswap v4 is not included in the finalized active fee policy. Before adding it,
 ## Required implementation and acceptance gates
 
 - [ ] Implement controller and factory/market integration according to this policy.
-- [ ] Test exact creation fee, over/underpayment revert, treasury accrual and withdrawal.
+- [ ] Test exact creation fee, over/underpayment revert, treasury accrual and withdrawal; a rejecting treasury must not block token creation, and failed token/market creation must roll back fee accounting.
 - [ ] Test fixed graduation fee only after graduation flow is implemented.
 - [ ] Add unit, fuzz, invariant and integration tests for 130 bps curve fees, rounding, recipient split, liabilities, and reverts.
 - [ ] Test 24-hour delay, cancellation, authority transfer, hard bounds, and global updates across existing markets.

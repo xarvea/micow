@@ -1,5 +1,7 @@
 # MICOW Master TODO
 
+Status snapshot 2026-10-16: current `main` is `61f4fe5a7041d403716768e867ab7674c463a94c`; post-merge CI `38837722074` and security `38837722123` passed. This does not mean deployment simulation or deployment completed; no transaction was broadcast.
+
 Status values: PENDING, IN_PROGRESS, BLOCKED, COMPLETED, NOT_VERIFIED. A checked implementation task is not a claim that its acceptance tests passed.
 
 ## P0 — Foundation
@@ -78,7 +80,7 @@ Status values: PENDING, IN_PROGRESS, BLOCKED, COMPLETED, NOT_VERIFIED. A checked
 - [x] Add deployment script that asserts chain ID 46630.
 - [x] Add manual deployment workflow with broadcast disabled by default and protected environment.
 - [x] Add main-branch testnet RPC and non-broadcast deployment preflight job.
-- [ ] Verify post-merge main CI/security for `383dd1f7e2718b2b5977ec83a8fe809f1300045c`. Testnet RPC/deployment simulation is intentionally skipped on PR workflows; no deployment or broadcast was performed.
+- [x] Verify post-merge main CI/security for `61f4fe5a7041d403716768e867ab7674c463a94c`: CI `38837722074` and security `38837722123` passed. Testnet RPC/deployment simulation is intentionally skipped on PR workflows; no deployment or broadcast was performed.
 - [ ] Review deployment simulation gas output and record the reviewed result.
 - [ ] Deploy factory only after contract gates pass. **BLOCKED:** no deployer key or test ETH is available in the execution environment.
 - [ ] Record chain ID, addresses, tx hashes, block numbers, compiler/settings.
