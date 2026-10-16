@@ -1,6 +1,6 @@
 # MICOW Master TODO
 
-Status snapshot 2026-10-16: current `main` is `8b7ab0689e4534f63ccd5dd9fce61799cf89c0cc` (PR #11 merged). Main CI `38875916343` and security `38875916097` passed on contract baseline `7baf9838164f9817ca3c880a1096aa3f6d056435`, including chain-ID 46630 verification and non-broadcast deployment simulation. Main documentation head is now `8b7ab0689e4534f63ccd5dd9fce61799cf89c0cc`. No deployment transaction was broadcast.
+Status snapshot 2026-10-16: current `main` is `f3a398781b30bf35d633e4de4d2bdf39672cd166`. CI `38916331756` and security `38916331618` passed on this exact SHA. Testnet chain-ID preflight and non-broadcast deployment simulation do not authorize or perform deployment. No deployment transaction was broadcast.
 
 Status values: PENDING, IN_PROGRESS, BLOCKED, COMPLETED, NOT_VERIFIED. A checked implementation task is not a claim that its acceptance tests passed.
 
@@ -65,7 +65,7 @@ Status values: PENDING, IN_PROGRESS, BLOCKED, COMPLETED, NOT_VERIFIED. A checked
 - [x] Add bounded RPC retry with exponential backoff and unit tests; RPC errors cannot be mistaken for a missing reorg ancestor.
 - [x] Extract and test the worker cycle supervisor; verify it resumes after a transient cycle failure and stops cleanly.
 - [x] Add PostgreSQL integration coverage proving a restarted indexer resumes at MAX(checkpoint) + 1.
-- [x] PR #7 process-level worker test acceptance passed on PR head: simulated RPC outage/recovery, durable checkpoint, graceful SIGTERM, and restart resume. CI `38837255615` and security `38837255569` passed; PR merged as `383dd1f7e2718b2b5977ec83a8fe809f1300045c`. Later main CI/security `38875916343` and `38875916097` passed on `7baf9838164f9817ca3c880a1096aa3f6d056435`.
+- [x] PR #7 process-level worker test acceptance passed on PR head: simulated RPC outage/recovery, durable checkpoint, graceful SIGTERM, and restart resume. CI `38837255615` and security `38837255569` passed; PR merged as `383dd1f7e2718b2b5977ec83a8fe809f1300045c`. Current main CI/security `38916331756` and `38916331618` passed on exact main SHA `f3a398781b30bf35d633e4de4d2bdf39672cd166`.
 - [x] Add a read-only reconciliation CLI comparing token projections with TokenCreated events, factory registry mappings, and market token getters (merged in PR #6).
 - [ ] Run reconciliation against a deployed testnet factory and verify controlled drift detection.
 
@@ -81,7 +81,7 @@ Status values: PENDING, IN_PROGRESS, BLOCKED, COMPLETED, NOT_VERIFIED. A checked
 - [x] Add deployment script that asserts chain ID 46630.
 - [x] Add manual deployment workflow with broadcast disabled by default and protected environment.
 - [x] Add main-branch testnet RPC and non-broadcast deployment preflight job.
-- [x] Latest verified contract CI/security passed on `7baf9838164f9817ca3c880a1096aa3f6d056435`: CI `38875916343` and security `38875916097` passed. Docs-only main head is `8b7ab0689e4534f63ccd5dd9fce61799cf89c0cc`; post-merge CI for the docs commit has not been observed. RPC chain-ID 46630 and non-broadcast deployment simulation passed; no deployment or broadcast was performed.
+- [x] Current main CI `38916331756` and security `38916331618` passed on `f3a398781b30bf35d633e4de4d2bdf39672cd166`. The CI workflow's chain-ID 46630 preflight and non-broadcast deployment simulation passed; no deployment or broadcast was performed.
 - [ ] Review deployment simulation gas output and record the reviewed result.
 - [ ] Deploy factory only after contract gates pass. **BLOCKED:** no deployer key or test ETH is available in the execution environment.
 - [ ] Record chain ID, addresses, tx hashes, block numbers, compiler/settings.

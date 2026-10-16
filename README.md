@@ -4,7 +4,7 @@ MICOW is an independently implemented, testnet-only EVM token launchpad targetin
 
 ## Current delivery status
 
-Documentation snapshot: 2026-10-16. Current main head: `8b7ab0689e4534f63ccd5dd9fce61799cf89c0cc` (PR #13 docs merge; PR #14 test merge is in its parent history). Main CI `38875916343` and security `38875916097` passed on contract baseline `7baf9838164f9817ca3c880a1096aa3f6d056435`. Testnet RPC chain ID 46630 and non-broadcast deployment simulation passed; no deployment transaction or broadcast was performed.
+Documentation snapshot: 2026-10-16. Current main head: `f3a398781b30bf35d633e4de4d2bdf39672cd166`. CI `38916331756` and security `38916331618` passed on this exact SHA. Testnet RPC chain ID 46630 and non-broadcast deployment simulation passed; no deployment transaction or broadcast was performed.
 
 - [x] Clean-room Git history established.
 - [x] Product scope, architecture, threat model, roadmap, build/deployment runbooks, operations, and acceptance gates documented.
@@ -20,7 +20,7 @@ Documentation snapshot: 2026-10-16. Current main head: `8b7ab0689e4534f63ccd5dd9
 - [ ] Testnet deployment and explorer verification completed. **BLOCKED** pending protected deployer key, test ETH, and deployment-environment protection review.
 - [x] PostgreSQL atomicity and worker-cycle recovery are merged; PR #6 read-only reconciliation CLI is merged (merge commit `dea1590d4579d2a4ca762c6536e815375ce8fc70`).
 - [x] PR #7 process-level recovery acceptance: CI run `38837255615` passed PostgreSQL process recovery, Foundry, web/API/indexer checks, and secret scan; security run `38837255569` passed. PR #7 merged as `383dd1f7e2718b2b5977ec83a8fe809f1300045c`.
-- [x] Verify post-merge main CI/security for `7baf9838164f9817ca3c880a1096aa3f6d056435`; CI `38875916343` and security `38875916097` passed.
+- [x] Verify current main CI/security: CI `38916331756` and security `38916331618` passed on exact SHA `f3a398781b30bf35d633e4de4d2bdf39672cd166`.
 - [x] PR #14 merged: forced-ETH accounting regression test passed CI/security on its PR head; this is test-only coverage, not a surplus-recovery mechanism.
 - [ ] Run reconciliation against an actual deployed testnet factory. **BLOCKED** until deployment prerequisites are satisfied.
 
@@ -28,7 +28,7 @@ Never treat this repository as audited or production-ready. Mainnet deployment i
 
 ## Current phase
 
-**P4 — Indexer and API reliability.** Durable checkpoint resume, worker-cycle retry/shutdown, atomic event/projection/checkpoint persistence, reorg rollback/replay, read-only reconciliation CLI, and process-level simulated RPC outage/restart acceptance are merged. PR #7 recovery work is merged; the latest verified main CI/security checks passed on contract baseline `7baf9838164f9817ca3c880a1096aa3f6d056435`. Live reconciliation remains blocked until a testnet factory is deployed. P5 local service E2E, P6 testnet deployment, and P8 recovery drills remain incomplete.
+**P4 — Indexer and API reliability.** Durable checkpoint resume, worker-cycle retry/shutdown, atomic event/projection/checkpoint persistence, reorg rollback/replay, read-only reconciliation CLI, and process-level simulated RPC outage/restart acceptance are merged. PR #7 recovery work is merged; the latest verified main CI/security checks passed on exact main SHA `f3a398781b30bf35d633e4de4d2bdf39672cd166`. Live reconciliation remains blocked until a testnet factory is deployed. P5 local service E2E, P6 testnet deployment, and P8 recovery drills remain incomplete.
 
 ## Stack
 

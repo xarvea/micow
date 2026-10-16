@@ -1,6 +1,6 @@
 # Acceptance Criteria and Phase Gates
 
-Status as of 2026-10-16: P4 — Indexer and API reliability. Current main snapshot is `8b7ab0689e4534f63ccd5dd9fce61799cf89c0cc` (PR #11 merged). Main CI `38875916343` and security `38875916097` passed on contract baseline `7baf9838164f9817ca3c880a1096aa3f6d056435`, including chain-ID 46630 verification and non-broadcast deployment simulation. PR #14's forced-ETH regression test separately passed CI/security on its PR head; its testnet simulation job was skipped. Live reconciliation and deployment remain blocked pending approved testnet-only credentials, test ETH, reviewed treasury, and protected-environment reviewer verification.
+Status as of 2026-10-16: P4 — Indexer and API reliability. Current main snapshot is `f3a398781b30bf35d633e4de4d2bdf39672cd166` (documentation reconciliation commit). Main CI `38916331756` and security `38916331618` both passed on this exact SHA, including the repository's contract and application checks; no deployment transaction or broadcast was performed. PR #14's forced-ETH regression test separately passed CI/security on its PR head; its testnet simulation job was skipped. Live reconciliation and deployment remain blocked pending approved testnet-only credentials, test ETH, reviewed treasury, and protected-environment reviewer verification.
 
 ## F0 — Foundation and specification
 
@@ -21,7 +21,8 @@ Status as of 2026-10-16: P4 — Indexer and API reliability. Current main snapsh
 - [x] Reentrancy protection covers state-changing ETH/token flows.
 - [x] No privileged reserve drain or arbitrary user balance mutation exists.
 - [x] Compiler build and bytecode-size report pass.
-- [ ] Add explicit forced-ETH accounting regression test and independent contract/economic review.
+- [x] Add forced-ETH accounting regression test (PR #14 merged and documented); forced ETH remains surplus, not a recoverable liability.
+- [ ] Complete independent contract/economic review and record reproducible findings.
 
 ## T1 — Contract tests
 
@@ -53,7 +54,7 @@ Status as of 2026-10-16: P4 — Indexer and API reliability. Current main snapsh
 - [x] PostgreSQL failure-injection test proves event and checkpoint writes roll back atomically when projection validation fails.
 - [x] Unit test verifies the worker continues after a transient cycle failure and exits cleanly on shutdown.
 - [x] PostgreSQL integration test verifies restart resumes from the first block after the last durable checkpoint.
-- [x] PR #7 process-level worker restart/RPC outage acceptance passed on the PR head: isolated PostgreSQL + simulated RPC outage, checkpoint persistence, graceful SIGTERM, restart resume. CI and security passed before merge; post-merge main checks remain pending verification.
+- [x] PR #7 process-level worker restart/RPC outage acceptance passed on the PR head: isolated PostgreSQL + simulated RPC outage, checkpoint persistence, graceful SIGTERM, restart resume. Later main CI/security runs passed, including CI `38916331756` and security `38916331618` on exact main SHA `f3a398781b30bf35d633e4de4d2bdf39672cd166`.
 - [x] Add a read-only reconciliation CLI for database projection and on-chain factory/market consistency.
 - [ ] Run reconciliation against a deployed testnet factory and verify controlled drift detection.
 
@@ -70,7 +71,7 @@ Status as of 2026-10-16: P4 — Indexer and API reliability. Current main snapsh
 ## D1 — Testnet deployment
 
 - [x] Deployment script rejects chain IDs other than 46630.
-- [x] CI workflow contains a testnet-only RPC chain-ID preflight and non-broadcast deployment simulation. Main run `38875916343` verified chain ID 46630 and simulation on commit `8b7ab0689e4534f63ccd5dd9fce61799cf89c0cc`; no deployment was performed.
+- [x] CI workflow contains a testnet-only RPC chain-ID preflight and non-broadcast deployment simulation. Main run `38916331756` passed on commit `f3a398781b30bf35d633e4de4d2bdf39672cd166`; the CI workflow includes testnet chain-ID preflight and non-broadcast deployment simulation. No deployment was performed.
 - [x] Manual deployment workflow requires explicit `broadcast=true` and uses the `robinhood-testnet` environment.
 - [ ] Configure environment required reviewers, protected deployer secret, RPC variable, and fee recipient.
 - [x] Main-branch RPC/deployment simulation CI job completed successfully.
