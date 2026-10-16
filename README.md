@@ -4,7 +4,7 @@ MICOW is an independently implemented, testnet-only EVM token launchpad targetin
 
 ## Current delivery status
 
-Documentation snapshot: 2026-10-16. PR #26 merged as `d9a12a94bd146036a7e1d7b579e6eb54536fd93e`. Post-merge CI `38930901087` and security `38930901199` are the verification runs for that exact SHA; check their linked results for final conclusions. No deployment transaction or public-chain broadcast was performed.
+Documentation snapshot: 2026-10-16. PR #28 merged as `02c314518e64318e6a88a4c76f52daf1fcfa2a5b`. Main CI `38940734418` and security `38940734236` were running when this snapshot was prepared; check their linked results for final conclusions. PR #28 CI `38936723431` and security `38936723423` passed. No deployment transaction or public-chain broadcast was performed.
 
 - [x] Clean-room Git history established.
 - [x] Product scope, architecture, threat model, roadmap, build/deployment runbooks, operations, and acceptance gates documented.
@@ -29,7 +29,7 @@ Never treat this repository as audited or production-ready. Mainnet deployment i
 
 ## Current phase
 
-**P5 — Local integration and release-gate hardening.** Full local service E2E now covers API health/readiness during PostgreSQL outage, migration reapply, local Anvil create/buy/sell, indexer checkpoint resume/idempotent replay, and clean shutdown. PR #26 adds fail-closed endpoint validation to prevent this E2E from targeting nonlocal RPC/database/API/web endpoints. P4 live reconciliation remains blocked until a testnet factory is deployed. Backup/restore, external-provider outage drill, independent audit, owner MEV-risk decision, and testnet deployment remain incomplete.
+**P8 — Testnet launch-readiness hardening.** Full local service E2E covers API health/readiness during PostgreSQL outage, migration reapply, local Anvil create/buy/sell, indexer checkpoint resume/idempotent replay, and clean shutdown. PR #28 adds a guarded PostgreSQL backup/restore CI drill; its PR CI and security checks passed. This does not prove durable backup retention or protected-environment restore. A stronger simulated RPC outage test is in progress to verify checkpoint freeze, recovery, and restart without duplicate checkpoints. P4 live reconciliation remains blocked until a testnet factory is deployed. Independent audit, owner MEV-risk decision, and testnet deployment remain incomplete.
 
 ## Stack
 
