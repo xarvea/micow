@@ -1,6 +1,6 @@
 # Acceptance Criteria and Phase Gates
 
-Status as of 2026-10-16: P4 — Indexer and API reliability. Current main snapshot is `61f4fe5a7041d403716768e867ab7674c463a94c` (PR #9 merged). Post-merge main CI run `38837722074` and security run `38837722123` both passed. PR #7 process-level recovery test passed on its PR head and post-merge main CI also passed. Live reconciliation and deployment remain blocked until a factory is deployed using approved testnet-only credentials and test ETH.
+Status as of 2026-10-16: P4 — Indexer and API reliability. Current main snapshot is `7baf9838164f9817ca3c880a1096aa3f6d056435` (PR #11 merged). Main CI `38875916343` and security `38875916097` passed, including contract checks, PostgreSQL integration, application checks, CodeQL, chain-ID 46630 verification, and non-broadcast deployment simulation. Live reconciliation and deployment remain blocked pending approved testnet-only credentials, test ETH, reviewed treasury, and protected-environment reviewer verification.
 
 ## F0 — Foundation and specification
 
@@ -16,7 +16,7 @@ Status as of 2026-10-16: P4 — Indexer and API reliability. Current main snapsh
 - [x] Factory creates a token and dedicated market atomically and emits creation events.
 - [x] Buy/sell quote and execution match within tested rounding rules.
 - [x] Minimum output and deadline checks are enforced.
-- [x] **Current code baseline:** fee rates/recipients are immutable; combined fees are bounded to 500 bps.
+- [x] **Current code baseline:** market trading fee rates/recipients are immutable at 100 bps protocol + 100 bps creator; combined fees are bounded to 500 bps. PR #11 adds an exact 0.0006 ETH factory creation fee with treasury-only pull accounting and guarded withdrawal.
 - [ ] **Requested future configuration:** fee controller is not implemented; ADR-0006 implementation and security gates must pass before acceptance.
 - [x] Reentrancy protection covers state-changing ETH/token flows.
 - [x] No privileged reserve drain or arbitrary user balance mutation exists.
@@ -59,7 +59,7 @@ Status as of 2026-10-16: P4 — Indexer and API reliability. Current main snapsh
 
 ## Fee-configuration acceptance (proposed; not implemented)
 
-- [x] Audit current factory/market source: current markets use immutable 100 bps protocol + 100 bps creator fees; creation is non-payable; graduation/controller/DEX fee collection are absent. Existing markets cannot be retrofitted by adding a controller.
+- [x] Audit current factory/market source: current markets use immutable 100 bps protocol + 100 bps creator fees; PR #11 implements exact 0.0006 ETH creation fee and treasury pull accounting. Graduation/controller/DEX fee collection remain absent. Existing markets cannot be retrofitted by adding a controller.
 - [x] Finalize fee policy in ADR-0006: creation 0.0006 ETH; graduation 0.0006 ETH only when graduation exists; curve buy/sell 130 bps total (100 bps treasury + 30 bps creator); global-live config; 500 bps max trading fee; 0.01 ETH max fixed fee; 24-hour delayed updates; explicit rounding.
 - [ ] Implement controller and controller-enabled factory/markets; policy is not yet active.
 - [ ] Verify creator claims and treasury withdrawals cannot spend reserves or other liabilities.
@@ -70,7 +70,7 @@ Status as of 2026-10-16: P4 — Indexer and API reliability. Current main snapsh
 ## D1 — Testnet deployment
 
 - [x] Deployment script rejects chain IDs other than 46630.
-- [x] CI workflow contains a testnet-only RPC chain-ID preflight and non-broadcast deployment simulation. [ ] Verify post-merge main run for `383dd1f7e2718b2b5977ec83a8fe809f1300045c`; PR workflows skip the testnet preflight and no deployment was performed.
+- [x] CI workflow contains a testnet-only RPC chain-ID preflight and non-broadcast deployment simulation. Main run `38875916343` verified chain ID 46630 and simulation on commit `7baf9838164f9817ca3c880a1096aa3f6d056435`; no deployment was performed.
 - [x] Manual deployment workflow requires explicit `broadcast=true` and uses the `robinhood-testnet` environment.
 - [ ] Configure environment required reviewers, protected deployer secret, RPC variable, and fee recipient.
 - [x] Main-branch RPC/deployment simulation CI job completed successfully.
