@@ -2,7 +2,7 @@ import dotenv from "dotenv";
 import { Pool, type PoolClient } from "pg";
 import { createPublicClient, decodeEventLog, defineChain, http, parseAbi, toEventSelector, type Address, type Hex } from "viem";
 import { eventIdentity, findCommonAncestor, type StoredBlock } from "./reorg.js";
-import { insertIndexedEvent, rollbackAfter } from "./store.js";
+import { inTransaction, insertIndexedEvent, rollbackAfter } from "./store.js";
 import { withRpcRetry } from "./retry.js";
 
 dotenv.config({ path: process.env.DOTENV_CONFIG_PATH ?? "../../.env" });
@@ -79,7 +79,7 @@ async function repairReorg(): Promise<void> {
 async function persistBlock(blockNumber: bigint, blockHash: Hex, parentHash: Hex, logs: readonly IndexedLog[]): Promise<void> {
   const db: PoolClient = await pool.connect();
   try {
-    await db.query("BEGIN");
+    await inTransaction(db, async () => {
     for (const log of logs) {
       if (!log.transactionHash || log.logIndex === null) continue;
       const topic0 = String(log.topics[0] ?? "").toLowerCase();
@@ -137,10 +137,7 @@ async function persistBlock(blockNumber: bigint, blockHash: Hex, parentHash: Hex
       }
     }
     await db.query("INSERT INTO indexed_blocks (chain_id, block_number, block_hash, parent_hash) VALUES ($1,$2,$3,$4) ON CONFLICT (chain_id, block_number) DO UPDATE SET block_hash = EXCLUDED.block_hash, parent_hash = EXCLUDED.parent_hash", [chainId, blockNumber.toString(), blockHash, parentHash]);
-    await db.query("COMMIT");
-  } catch (error) {
-    await db.query("ROLLBACK");
-    throw error;
+    });
   } finally {
     db.release();
   }

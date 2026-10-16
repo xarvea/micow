@@ -15,6 +15,19 @@ export type IndexedEventRecord = {
   payload: unknown;
 };
 
+
+export async function inTransaction<T>(db: PoolClient, operation: () => Promise<T>): Promise<T> {
+  await db.query("BEGIN");
+  try {
+    const result = await operation();
+    await db.query("COMMIT");
+    return result;
+  } catch (error) {
+    await db.query("ROLLBACK");
+    throw error;
+  }
+}
+
 function serialize(value: unknown): string {
   return JSON.stringify(value, (_key, item: unknown) => typeof item === "bigint" ? item.toString() : item) ?? "null";
 }
@@ -50,15 +63,12 @@ export async function rollbackAfter(
 ): Promise<void> {
   const db = await pool.connect();
   try {
-    await db.query("BEGIN");
-    await db.query("DELETE FROM trades WHERE chain_id = $1 AND block_number > $2", [chainId, ancestor.toString()]);
-    await db.query("DELETE FROM tokens WHERE chain_id = $1 AND created_block > $2", [chainId, ancestor.toString()]);
-    await db.query("DELETE FROM indexed_events WHERE chain_id = $1 AND block_number > $2", [chainId, ancestor.toString()]);
-    await db.query("DELETE FROM indexed_blocks WHERE chain_id = $1 AND block_number > $2", [chainId, ancestor.toString()]);
-    await db.query("COMMIT");
-  } catch (error) {
-    await db.query("ROLLBACK");
-    throw error;
+    await inTransaction(db, async () => {
+      await db.query("DELETE FROM trades WHERE chain_id = $1 AND block_number > $2", [chainId, ancestor.toString()]);
+      await db.query("DELETE FROM tokens WHERE chain_id = $1 AND created_block > $2", [chainId, ancestor.toString()]);
+      await db.query("DELETE FROM indexed_events WHERE chain_id = $1 AND block_number > $2", [chainId, ancestor.toString()]);
+      await db.query("DELETE FROM indexed_blocks WHERE chain_id = $1 AND block_number > $2", [chainId, ancestor.toString()]);
+    });
   } finally {
     db.release();
   }

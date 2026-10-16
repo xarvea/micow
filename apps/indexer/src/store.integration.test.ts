@@ -2,7 +2,7 @@ import { readFile } from "node:fs/promises";
 import { Pool } from "pg";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { eventIdentity } from "./reorg.js";
-import { insertIndexedEvent, rollbackAfter } from "./store.js";
+import { inTransaction, insertIndexedEvent, rollbackAfter } from "./store.js";
 
 const databaseUrl = process.env.TEST_DATABASE_URL;
 const integrationDescribe = describe.skipIf(!databaseUrl);
@@ -144,4 +144,44 @@ integrationDescribe("PostgreSQL indexer persistence", () => {
     );
     expect(replay.rows[0]).toMatchObject({ block_number: "11", block_hash: "0xcanonical11" });
   });
+
+  it("rolls back event and checkpoint writes when a projection violates a database invariant", async () => {
+    const db = await pool.connect();
+    try {
+      await expect(inTransaction(db, async () => {
+        await insertIndexedEvent(db, {
+          chainId: 46630,
+          eventId: eventIdentity(46630, "0xatomic-failure", 0),
+          txHash: "0xatomic-failure",
+          logIndex: 0,
+          blockNumber: 20n,
+          blockHash: "0xblock20",
+          contractAddress: "0x0000000000000000000000000000000000000001",
+          topic0: "0xtopic",
+          topics: ["0xtopic"],
+          data: "0x",
+          eventName: "TokenCreated",
+          payload: { token: "0x0000000000000000000000000000000000000002" },
+        });
+        await db.query(
+          "INSERT INTO indexed_blocks (chain_id, block_number, block_hash, parent_hash) VALUES ($1,$2,$3,$4)",
+          [46630, 20, "0xblock20", "0xblock19"],
+        );
+        await db.query(
+          "INSERT INTO trades (chain_id, tx_hash, log_index, token_address, market_address, side, trader_address, amount_in, amount_out, protocol_fee, creator_fee, block_number, block_hash) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)",
+          [46630, "0xatomic-failure", 1, "0x0000000000000000000000000000000000000002", "0x0000000000000000000000000000000000000003", "invalid-side", "0x0000000000000000000000000000000000000004", "1", "1", "0", "0", 20, "0xblock20"],
+        );
+      })).rejects.toThrow();
+    } finally {
+      db.release();
+    }
+
+    const events = await pool.query("SELECT COUNT(*)::int AS count FROM indexed_events WHERE chain_id = $1", [46630]);
+    const blocks = await pool.query("SELECT COUNT(*)::int AS count FROM indexed_blocks WHERE chain_id = $1", [46630]);
+    const trades = await pool.query("SELECT COUNT(*)::int AS count FROM trades WHERE chain_id = $1", [46630]);
+    expect(events.rows[0]?.count).toBe(0);
+    expect(blocks.rows[0]?.count).toBe(0);
+    expect(trades.rows[0]?.count).toBe(0);
+  });
+
 });

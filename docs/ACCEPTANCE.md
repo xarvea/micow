@@ -1,6 +1,6 @@
 # Acceptance Criteria and Phase Gates
 
-The merged foundation and PostgreSQL integration baseline passed CI. The reliability-hardening branch adds bounded RPC retry, stable trade ordering, a rate-limit test, wallet-bundler warning cleanup, and protected testnet deployment workflows; recheck CI before merging this branch. Actual deployment remains blocked until a protected testnet key and test ETH are available.
+The merged foundation and PostgreSQL integration baseline passed CI. The reliability-hardening baseline is merged. The next phase adds a production-used transaction helper and a PostgreSQL failure-injection regression test; recheck CI before merging this phase. Actual deployment remains blocked until a protected testnet key and test ETH are available.
 
 ## F0 — Foundation and specification
 
@@ -49,7 +49,7 @@ The merged foundation and PostgreSQL integration baseline passed CI. The reliabi
 - [x] API readiness, token listing, and trade history pass PostgreSQL integration tests.
 - [x] Token and trade pagination use deterministic tie-breakers.
 - [x] Query validation, bounded pagination, parameterized SQL, rate-limit behavior, and bounded RPC retry are tested.
-- [ ] Failure-injection test proves event/projection/checkpoint writes roll back atomically.
+- [x] PostgreSQL failure-injection test proves event and checkpoint writes roll back atomically when projection validation fails.
 - [ ] Worker restart/RPC outage end-to-end test and RPC-to-contract-state reconciliation.
 
 ## D1 — Testnet deployment

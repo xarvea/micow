@@ -48,7 +48,7 @@ Status values: PENDING, IN_PROGRESS, BLOCKED, COMPLETED, NOT_VERIFIED. A checked
 - [x] Implement block-by-block checkpoints with hash/parent hash.
 - [x] Implement event identity uniqueness and idempotent inserts.
 - [x] Persist events, projections, and checkpoints in a transaction.
-- [ ] Add failure-injection coverage proving event/checkpoint writes roll back together.
+- [x] Add PostgreSQL failure-injection coverage proving event and checkpoint writes roll back together when a projection violates a database invariant.
 - [x] Implement common-ancestor reorg rollback and replay.
 - [x] Implement Fastify read-only API with validation and rate limits.
 - [x] Add deterministic trade ordering by block, log index, and transaction hash.
