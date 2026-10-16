@@ -42,6 +42,37 @@ wait_for() {
   return 1
 }
 
+INDEXER_RUN=1
+start_indexer() {
+  local log_file="$LOG_DIR/indexer-${INDEXER_RUN}.log"
+  (cd apps/indexer && ./node_modules/.bin/tsx src/main.ts) >"$log_file" 2>&1 &
+  INDEXER_PID=$!
+  wait_for "indexer startup ${INDEXER_RUN}" "grep -q 'MICOW indexer started on chain 46630' '$log_file'"
+}
+
+stop_process() {
+  local name="$1"
+  local pid="$2"
+  local log_file="$3"
+  if ! kill -0 "$pid" 2>/dev/null; then
+    wait "$pid" 2>/dev/null || true
+    printf 'stopped: %s (already exited)\n' "$name"
+    return 0
+  fi
+  kill -TERM "$pid"
+  for _ in $(seq 1 20); do
+    if ! kill -0 "$pid" 2>/dev/null; then
+      wait "$pid"
+      printf 'stopped: %s\n' "$name"
+      return 0
+    fi
+    sleep 1
+  done
+  cat "$log_file" >&2
+  printf 'ERROR: timed out stopping %s\n' "$name" >&2
+  return 1
+}
+
 export DATABASE_URL
 export RH_TESTNET_RPC_URL="$LOCAL_RPC"
 export API_PORT=4000
@@ -85,14 +116,15 @@ if [[ "$migration_ok" != true ]]; then
   echo "ERROR: database migration failed" >&2
   exit 1
 fi
+# Reapplying migrations verifies startup is safe after an interrupted/retried bootstrap.
+pnpm --filter @micow/api db:migrate >"$LOG_DIR/migrate-repeat.log" 2>&1
 
-pnpm --filter @micow/api exec tsx src/server.ts >"$LOG_DIR/api.log" 2>&1 &
+(cd apps/api && ./node_modules/.bin/tsx src/server.ts) >"$LOG_DIR/api.log" 2>&1 &
 API_PID=$!
-pnpm --filter @micow/indexer exec tsx src/main.ts >"$LOG_DIR/indexer.log" 2>&1 &
-INDEXER_PID=$!
+start_indexer
 export NEXT_PUBLIC_LAUNCHPAD_FACTORY_ADDRESS="$FACTORY_ADDRESS"
 export NEXT_PUBLIC_ROBINHOOD_RPC_URL="$LOCAL_RPC"
-pnpm --filter @micow/web dev >"$LOG_DIR/web.log" 2>&1 &
+(cd apps/web && ./node_modules/.bin/next dev) >"$LOG_DIR/web.log" 2>&1 &
 WEB_PID=$!
 
 wait_for "API health" "curl -fsS '$API_URL/health'"
@@ -128,7 +160,34 @@ done
 printf '%s' "$tokens_json" | jq -e --arg token "$TOKEN_ADDRESS" '[.items[] | select((.token_address | ascii_downcase) == ($token | ascii_downcase) and .symbol == "P5E2E")] | length == 1' >/dev/null
 printf '%s' "$trades_json" | jq -e '.items | length == 2 and (map(.side) | sort == ["buy","sell"])' >/dev/null
 
-# Verify the persisted event and projection counts, not just HTTP success.
+# Record the durable checkpoint, stop the indexer, rerun migrations, and resume from PostgreSQL.
+CHECKPOINT_BEFORE="$(curl -fsS "$API_URL/ready" | jq -r '.indexedThrough')"
+if [[ -z "$CHECKPOINT_BEFORE" || "$CHECKPOINT_BEFORE" == "null" ]]; then
+  echo "ERROR: indexer did not persist a durable checkpoint" >&2
+  exit 1
+fi
+stop_process "indexer" "$INDEXER_PID" "$LOG_DIR/indexer-${INDEXER_RUN}.log"
+INDEXER_PID=""
+pnpm --filter @micow/api db:migrate >"$LOG_DIR/migrate-after-restart.log" 2>&1
+INDEXER_RUN=2
+start_indexer
+wait_for "indexer checkpoint resume" "curl -fsS '$API_URL/ready' | jq -e --arg checkpoint '$CHECKPOINT_BEFORE' '.indexedThrough == $checkpoint'"
+trades_json="$(curl -fsS "$API_URL/v1/tokens/$TOKEN_ADDRESS/trades?limit=10&offset=0")"
+printf '%s' "$trades_json" | jq -e '.items | length == 2 and (map(.side) | sort == ["buy","sell"])' >/dev/null
+
+# Generate a second buy/sell after restart to prove the resumed worker continues indexing.
+cast send "$MARKET_ADDRESS" 'buy(uint256,uint256)' 0 "$DEADLINE" --value 0.1ether --private-key "$ANVIL_KEY" --rpc-url "$LOCAL_RPC" --json >"$LOG_DIR/buy-after-restart.json"
+cast send "$TOKEN_ADDRESS" 'approve(address,uint256)' "$MARKET_ADDRESS" 1000000000000000000000000 --private-key "$ANVIL_KEY" --rpc-url "$LOCAL_RPC" --json >"$LOG_DIR/approve-after-restart.json"
+cast send "$MARKET_ADDRESS" 'sell(uint256,uint256,uint256)' 1000000000000000000000000 0 "$DEADLINE" --private-key "$ANVIL_KEY" --rpc-url "$LOCAL_RPC" --json >"$LOG_DIR/sell-after-restart.json"
+
+for _ in $(seq 1 60); do
+  trades_json="$(curl -fsS "$API_URL/v1/tokens/$TOKEN_ADDRESS/trades?limit=10&offset=0" 2>/dev/null || true)"
+  if printf '%s' "$trades_json" | jq -e '.items | length == 4 and (map(.side) | sort == ["buy","buy","sell","sell"])' >/dev/null 2>&1; then break; fi
+  sleep 2
+done
+printf '%s' "$trades_json" | jq -e '.items | length == 4 and (map(.side) | sort == ["buy","buy","sell","sell"])' >/dev/null
+
+# Verify event/projection counts after restart and ensure replay did not duplicate existing trades.
 E2E_TOKEN_ADDRESS="$TOKEN_ADDRESS" pnpm --filter @micow/api exec node --input-type=module -e '
 import { Pool } from "pg";
 const pool = new Pool({ connectionString: process.env.DATABASE_URL, max: 1 });
@@ -139,14 +198,21 @@ try {
     [token],
   );
   const row = result.rows[0];
-  if (Number(row.token_count) !== 1 || Number(row.trade_count) !== 2 || Number(row.event_count) < 3) {
-    throw new Error("projection mismatch: " + JSON.stringify(row));
+  if (Number(row.token_count) !== 1 || Number(row.trade_count) !== 4 || Number(row.event_count) < 5) {
+    throw new Error("projection mismatch after restart: " + JSON.stringify(row));
   }
-  console.log("PASS: database event/projection counts", row);
+  console.log("PASS: database event/projection counts after restart", row);
 } finally {
   await pool.end();
 }
 '
 
-echo "PASS: local chain 46630, factory deployment, create/buy/sell, API/web readiness, and indexed projections"
-echo "factory=$FACTORY_ADDRESS token=$TOKEN_ADDRESS market=$MARKET_ADDRESS"
+stop_process "indexer" "$INDEXER_PID" "$LOG_DIR/indexer-${INDEXER_RUN}.log"
+INDEXER_PID=""
+stop_process "API" "$API_PID" "$LOG_DIR/api.log"
+API_PID=""
+stop_process "web" "$WEB_PID" "$LOG_DIR/web.log"
+WEB_PID=""
+
+echo "PASS: local chain 46630, create/buy/sell, API/web readiness, migration reapply, durable indexer restart/resume, and clean service shutdown"
+echo "factory=$FACTORY_ADDRESS token=$TOKEN_ADDRESS market=$MARKET_ADDRESS checkpoint=$CHECKPOINT_BEFORE"
