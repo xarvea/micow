@@ -1,5 +1,7 @@
 # MICOW Master TODO
 
+Status snapshot 2026-10-16: current `main` is `61f4fe5a7041d403716768e867ab7674c463a94c`; post-merge CI `38837722074` and security `38837722123` passed. This does not mean deployment simulation or deployment completed; no transaction was broadcast.
+
 Status values: PENDING, IN_PROGRESS, BLOCKED, COMPLETED, NOT_VERIFIED. A checked implementation task is not a claim that its acceptance tests passed.
 
 ## P0 — Foundation
