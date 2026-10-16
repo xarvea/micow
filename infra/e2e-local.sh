@@ -126,7 +126,24 @@ printf '%s' "$tokens_json" | jq -e --arg token "$TOKEN_ADDRESS" '[.items[] | sel
 printf '%s' "$trades_json" | jq -e '.items | length == 2 and (map(.side) | sort == ["buy","sell"])' >/dev/null
 
 # Verify the persisted event and projection counts, not just HTTP success.
-psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -Atc "SELECT CASE WHEN (SELECT COUNT(*) FROM tokens WHERE chain_id=46630 AND lower(token_address)=lower('$TOKEN_ADDRESS'))=1 AND (SELECT COUNT(*) FROM trades WHERE chain_id=46630 AND lower(token_address)=lower('$TOKEN_ADDRESS'))=2 AND (SELECT COUNT(*) FROM indexed_events WHERE chain_id=46630 AND event_name IN ('TokenCreated','Buy','Sell')) >= 3 THEN 'PASS' ELSE 'FAIL' END" | grep -qx PASS
+E2E_TOKEN_ADDRESS="$TOKEN_ADDRESS" pnpm --filter @micow/api exec node --input-type=module -e '
+import { Pool } from "pg";
+const pool = new Pool({ connectionString: process.env.DATABASE_URL, max: 1 });
+try {
+  const token = process.env.E2E_TOKEN_ADDRESS;
+  const result = await pool.query(
+    "SELECT (SELECT COUNT(*) FROM tokens WHERE chain_id=46630 AND lower(token_address)=lower($1)) AS token_count, (SELECT COUNT(*) FROM trades WHERE chain_id=46630 AND lower(token_address)=lower($1)) AS trade_count, (SELECT COUNT(*) FROM indexed_events WHERE chain_id=46630 AND event_name IN (\x27TokenCreated\x27,\x27Buy\x27,\x27Sell\x27)) AS event_count",
+    [token],
+  );
+  const row = result.rows[0];
+  if (Number(row.token_count) !== 1 || Number(row.trade_count) !== 2 || Number(row.event_count) < 3) {
+    throw new Error("projection mismatch: " + JSON.stringify(row));
+  }
+  console.log("PASS: database event/projection counts", row);
+} finally {
+  await pool.end();
+}
+'
 
 echo "PASS: local chain 46630, factory deployment, create/buy/sell, API/web readiness, and indexed projections"
 echo "factory=$FACTORY_ADDRESS token=$TOKEN_ADDRESS market=$MARKET_ADDRESS"
