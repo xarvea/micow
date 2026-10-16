@@ -42,6 +42,10 @@ wait_for() {
   return 1
 }
 
+decimal_gas() {
+  node -e 'console.log(BigInt(process.argv[1]).toString())' "$1"
+}
+
 INDEXER_RUN=1
 start_indexer() {
   local log_file="$LOG_DIR/indexer-${INDEXER_RUN}.log"
@@ -96,6 +100,12 @@ if [[ ! "$FACTORY_ADDRESS" =~ ^0x[a-fA-F0-9]{40}$ ]]; then
   echo "ERROR: local factory address not found in deployment output" >&2
   exit 1
 fi
+BROADCAST_FILE="broadcast/DeployTestnet.s.sol/46630/run-latest.json"
+DEPLOY_GAS_HEX="$(jq -r --arg addr "$FACTORY_ADDRESS" '.receipts[] | select((.contractAddress // "" | ascii_downcase) == ($addr | ascii_downcase)) | .gasUsed' "$BROADCAST_FILE" | tail -n 1)"
+if [[ -z "$DEPLOY_GAS_HEX" || "$DEPLOY_GAS_HEX" == "null" ]]; then
+  echo "ERROR: factory deployment receipt gas was not found in $BROADCAST_FILE" >&2
+  exit 1
+fi
 DEPLOY_BLOCK=1
 export LAUNCHPAD_FACTORY_ADDRESS="$FACTORY_ADDRESS"
 export INDEXER_START_BLOCK="$DEPLOY_BLOCK"
@@ -131,6 +141,7 @@ wait_for "API health" "curl -fsS '$API_URL/health'"
 wait_for "web server" "curl -fsS '$WEB_URL' | grep -q 'Launch ideas'"
 
 CREATE_RECEIPT="$(cast send "$FACTORY_ADDRESS" 'createToken(string,string,string)' 'P5 E2E Token' 'P5E2E' 'ipfs://p5-e2e' --value 0.0006ether --private-key "$ANVIL_KEY" --rpc-url "$LOCAL_RPC" --json)"
+CREATE_GAS_HEX="$(printf '%s' "$CREATE_RECEIPT" | jq -r '.gasUsed')"
 TOKEN_ADDRESS="$(printf '%s' "$CREATE_RECEIPT" | jq -r '[.logs[] | select((.topics | length) >= 4)][0].topics[2] | "0x" + .[26:]')"
 MARKET_ADDRESS="$(printf '%s' "$CREATE_RECEIPT" | jq -r '[.logs[] | select((.topics | length) >= 4)][0].topics[3] | "0x" + .[26:]')"
 if [[ ! "$TOKEN_ADDRESS" =~ ^0x[a-fA-F0-9]{40}$ || ! "$MARKET_ADDRESS" =~ ^0x[a-fA-F0-9]{40}$ ]]; then
@@ -143,6 +154,8 @@ DEADLINE=4102444800
 cast send "$MARKET_ADDRESS" 'buy(uint256,uint256)' 0 "$DEADLINE" --value 0.1ether --private-key "$ANVIL_KEY" --rpc-url "$LOCAL_RPC" --json >"$LOG_DIR/buy.json"
 cast send "$TOKEN_ADDRESS" 'approve(address,uint256)' "$MARKET_ADDRESS" 1000000000000000000000000 --private-key "$ANVIL_KEY" --rpc-url "$LOCAL_RPC" --json >"$LOG_DIR/approve.json"
 cast send "$MARKET_ADDRESS" 'sell(uint256,uint256,uint256)' 1000000000000000000000000 0 "$DEADLINE" --private-key "$ANVIL_KEY" --rpc-url "$LOCAL_RPC" --json >"$LOG_DIR/sell.json"
+BUY_GAS_HEX="$(jq -r '.gasUsed' "$LOG_DIR/buy.json")"
+SELL_GAS_HEX="$(jq -r '.gasUsed' "$LOG_DIR/sell.json")"
 
 tokens_json=""
 trades_json=""
@@ -180,6 +193,12 @@ cast send "$MARKET_ADDRESS" 'buy(uint256,uint256)' 0 "$DEADLINE" --value 0.1ethe
 cast send "$TOKEN_ADDRESS" 'approve(address,uint256)' "$MARKET_ADDRESS" 1000000000000000000000000 --private-key "$ANVIL_KEY" --rpc-url "$LOCAL_RPC" --json >"$LOG_DIR/approve-after-restart.json"
 cast send "$MARKET_ADDRESS" 'sell(uint256,uint256,uint256)' 1000000000000000000000000 0 "$DEADLINE" --private-key "$ANVIL_KEY" --rpc-url "$LOCAL_RPC" --json >"$LOG_DIR/sell-after-restart.json"
 
+# Measure fee withdrawals from mined local Anvil receipts as well.
+cast send "$MARKET_ADDRESS" 'withdrawFees()' --private-key "$ANVIL_KEY" --rpc-url "$LOCAL_RPC" --json >"$LOG_DIR/market-fee-withdrawal.json"
+cast send "$FACTORY_ADDRESS" 'withdrawTreasuryFees()' --private-key "$ANVIL_KEY" --rpc-url "$LOCAL_RPC" --json >"$LOG_DIR/treasury-fee-withdrawal.json"
+MARKET_WITHDRAW_GAS_HEX="$(jq -r '.gasUsed' "$LOG_DIR/market-fee-withdrawal.json")"
+TREASURY_WITHDRAW_GAS_HEX="$(jq -r '.gasUsed' "$LOG_DIR/treasury-fee-withdrawal.json")"
+
 for _ in $(seq 1 60); do
   trades_json="$(curl -fsS "$API_URL/v1/tokens/$TOKEN_ADDRESS/trades?limit=10&offset=0" 2>/dev/null || true)"
   if printf '%s' "$trades_json" | jq -e '.items | length == 4 and (map(.side) | sort == ["buy","buy","sell","sell"])' >/dev/null 2>&1; then break; fi
@@ -214,5 +233,12 @@ API_PID=""
 stop_process "web" "$WEB_PID" "$LOG_DIR/web.log"
 WEB_PID=""
 
+echo "GAS_BASELINE_LOCAL_ANVIL chain_id=46630 solc=0.8.28 optimizer=true optimizer_runs=200 evm_version=cancun"
+echo "gas.factory_deployment=$(decimal_gas "$DEPLOY_GAS_HEX")"
+echo "gas.token_creation_including_token_and_market=$(decimal_gas "$CREATE_GAS_HEX")"
+echo "gas.buy=$(decimal_gas "$BUY_GAS_HEX")"
+echo "gas.sell=$(decimal_gas "$SELL_GAS_HEX")"
+echo "gas.market_fee_withdrawal=$(decimal_gas "$MARKET_WITHDRAW_GAS_HEX")"
+echo "gas.treasury_creation_fee_withdrawal=$(decimal_gas "$TREASURY_WITHDRAW_GAS_HEX")"
 echo "PASS: local chain 46630, create/buy/sell, API/web readiness, migration reapply, durable indexer restart/resume, and clean service shutdown"
 echo "factory=$FACTORY_ADDRESS token=$TOKEN_ADDRESS market=$MARKET_ADDRESS checkpoint=$CHECKPOINT_BEFORE"
