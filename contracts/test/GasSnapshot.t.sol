@@ -35,8 +35,10 @@ contract GasSnapshotTest is Test {
 
     function testGas_FactoryDeployment() public {
         uint256 startGas = gasleft();
-        new LaunchpadFactory(makeAddr("gas-deploy-recipient"));
-        emit log_named_uint("gas.factory_deployment", startGas - gasleft());
+        LaunchpadFactory deployed = new LaunchpadFactory(makeAddr("gas-deploy-recipient"));
+        uint256 gasUsed = startGas - gasleft();
+        assertGt(address(deployed).code.length, 0);
+        emit log_named_uint("gas.factory_deployment", gasUsed);
     }
 
     function testGas_TokenCreation() public {
