@@ -5,9 +5,9 @@ Project state as of 2026-10-16: **P4 — Indexer and API reliability**. Testnet-
 ## Current execution snapshot
 
 - **Merged:** foundation, contract baseline, RPC/API hardening, PostgreSQL idempotency/reorg integration, atomic indexer persistence, and worker restart/cycle recovery.
-- **Current main snapshot:** `8b7ab0689e4534f63ccd5dd9fce61799cf89c0cc` (PR #13 docs merge; PR #14 test merge is in parent history). Latest verified contract CI/security `38875916343` / `38875916097` passed on `7baf9838164f9817ca3c880a1096aa3f6d056435`; this does not establish deployment readiness.
+- **Current main snapshot:** `f3a398781b30bf35d633e4de4d2bdf39672cd166`. CI `38916331756` and security `38916331618` passed on this exact SHA; this does not establish economic review, gas snapshot, P5 E2E, or deployment readiness.
 - **Merged:** PR #6 read-only reconciliation CLI, PR #7 process-level outage/restart acceptance, PR #8 fee-policy proposal documentation, PR #13 post-PR11 documentation refresh, and PR #14 forced-ETH accounting regression test.
-- **PR #7 verification:** CI run `38837255615` and security run `38837255569` passed on the latest PR head before merge. Later main CI/security runs `38875916343` and `38875916097` passed on `7baf9838164f9817ca3c880a1096aa3f6d056435`.
+- **PR #7 verification:** CI run `38837255615` and security run `38837255569` passed on the latest PR head before merge. Current main CI/security runs `38916331756` and `38916331618` passed on exact SHA `f3a398781b30bf35d633e4de4d2bdf39672cd166`.
 - **Blocked:** live reconciliation and testnet deployment require an actual deployed factory; deployment also requires a protected testnet-only deployer key, test ETH, a reviewed fee recipient, and protected environment reviewers.
 - **Not complete:** real-provider outage drill, local full-service E2E, backup/restore drill, independent contract/economic review.
 - **Safety boundary:** no mainnet configuration, deployment, or real-value transaction is authorized by this roadmap.
