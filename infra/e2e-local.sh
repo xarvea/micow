@@ -35,6 +35,11 @@ localHttp("API_URL", process.env.API_URL, 4000);
 localHttp("WEB_URL", process.env.WEB_URL, 3000);
 NODE
 
+if [[ "${MICOW_E2E_GUARD_ONLY:-0}" == "1" ]]; then
+  echo "PASS: local E2E endpoint guard"
+  exit 0
+fi
+
 ANVIL_KEY=""
 LOCAL_ADDRESS="0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266"
 LOG_DIR="${TMPDIR:-/tmp}/micow-p5-e2e"
