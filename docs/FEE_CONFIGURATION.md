@@ -60,7 +60,7 @@ Uniswap v4 is not included in the finalized active fee policy. Before adding it,
 ## Required implementation and acceptance gates
 
 - [ ] Implement controller and factory/market integration according to this policy.
-- [ ] Verify exact creation fee, over/underpayment reverts, treasury-only pull accounting, guarded withdrawal, rejecting treasury behavior, and failure rollback through PR #11 CI before merge.
+- [x] Verify exact creation fee, over/underpayment reverts, treasury-only pull accounting, guarded withdrawal, rejecting treasury behavior, and failure rollback through merged PR #11 CI (`38875916343`).
 - [ ] Test fixed graduation fee only after graduation flow is implemented.
 - [ ] Add unit, fuzz, invariant and integration tests for 130 bps curve fees, rounding, recipient split, liabilities, and reverts.
 - [ ] Test 24-hour delay, cancellation, authority transfer, hard bounds, and global updates across existing markets.
