@@ -67,9 +67,10 @@ contract BondingCurveMarketTest is Test {
         trader = makeAddr("trader");
         vm.deal(creator, 1 ether);
         LaunchpadFactory factory = new LaunchpadFactory(protocolFeeRecipient);
+        uint256 creationFee = factory.CREATION_FEE();
         vm.prank(creator);
         (address tokenAddress, address marketAddress) =
-            factory.createToken{value: factory.CREATION_FEE()}("Micow Test", "MCWT", "ipfs://example-metadata");
+            factory.createToken{value: creationFee}("Micow Test", "MCWT", "ipfs://example-metadata");
         token = LaunchToken(tokenAddress);
         market = BondingCurveMarket(payable(marketAddress));
         vm.deal(trader, 10 ether);
