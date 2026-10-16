@@ -36,9 +36,8 @@ contract GasSnapshotTest is Test {
 
     function testGas_FactoryDeployment() public {
         address recipient = makeAddr("gas-deploy-recipient");
-        vm.startSnapshotGas("factory_deployment");
         LaunchpadFactory deployed = new LaunchpadFactory(recipient);
-        uint256 gasUsed = vm.stopSnapshotGas("factory_deployment");
+        uint256 gasUsed = vm.snapshotGasLastFrame("factory_deployment");
         vm.expectRevert(LaunchpadFactory.UnauthorizedTreasury.selector);
         deployed.withdrawTreasuryFees();
         assertGt(address(deployed).code.length, 0);
@@ -47,18 +46,16 @@ contract GasSnapshotTest is Test {
 
     function testGas_TokenCreation() public {
         uint256 creationFee = factory.CREATION_FEE();
-        vm.startSnapshotGas("token_creation_including_token_and_market");
         vm.prank(creator);
         factory.createToken{value: creationFee}("Gas Token", "GT", "ipfs://gas-token");
-        uint256 gasUsed = vm.stopSnapshotGas("token_creation_including_token_and_market");
+        uint256 gasUsed = vm.snapshotGasLastFrame("token_creation_including_token_and_market");
         emit log_named_uint("gas.token_creation_including_token_and_market", gasUsed);
     }
 
     function testGas_Buy() public {
-        vm.startSnapshotGas("buy");
         vm.prank(trader);
         market.buy{value: 0.1 ether}(0, block.timestamp);
-        uint256 gasUsed = vm.stopSnapshotGas("buy");
+        uint256 gasUsed = vm.snapshotGasLastFrame("buy");
         emit log_named_uint("gas.buy", gasUsed);
     }
 
@@ -69,10 +66,9 @@ contract GasSnapshotTest is Test {
         vm.prank(trader);
         token.approve(address(market), amount);
 
-        vm.startSnapshotGas("sell");
         vm.prank(trader);
         market.sell(amount, 0, block.timestamp);
-        uint256 gasUsed = vm.stopSnapshotGas("sell");
+        uint256 gasUsed = vm.snapshotGasLastFrame("sell");
         emit log_named_uint("gas.sell", gasUsed);
     }
 
@@ -80,18 +76,16 @@ contract GasSnapshotTest is Test {
         vm.prank(trader);
         market.buy{value: 0.1 ether}(0, block.timestamp);
 
-        vm.startSnapshotGas("market_fee_withdrawal");
         vm.prank(protocolFeeRecipient);
         market.withdrawFees();
-        uint256 gasUsed = vm.stopSnapshotGas("market_fee_withdrawal");
+        uint256 gasUsed = vm.snapshotGasLastFrame("market_fee_withdrawal");
         emit log_named_uint("gas.market_fee_withdrawal", gasUsed);
     }
 
     function testGas_TreasuryCreationFeeWithdrawal() public {
-        vm.startSnapshotGas("treasury_creation_fee_withdrawal");
         vm.prank(protocolFeeRecipient);
         factory.withdrawTreasuryFees();
-        uint256 gasUsed = vm.stopSnapshotGas("treasury_creation_fee_withdrawal");
+        uint256 gasUsed = vm.snapshotGasLastFrame("treasury_creation_fee_withdrawal");
         emit log_named_uint("gas.treasury_creation_fee_withdrawal", gasUsed);
     }
 }
