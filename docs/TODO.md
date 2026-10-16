@@ -59,7 +59,7 @@ Status values: PENDING, IN_PROGRESS, BLOCKED, COMPLETED, NOT_VERIFIED. A checked
 - [x] Add bounded RPC retry with exponential backoff and unit tests; RPC errors cannot be mistaken for a missing reorg ancestor.
 - [x] Extract and test the worker cycle supervisor; verify it resumes after a transient cycle failure and stops cleanly.
 - [x] Add PostgreSQL integration coverage proving a restarted indexer resumes at MAX(checkpoint) + 1.
-- [ ] Add full process-level worker restart/RPC outage end-to-end tests.
+- [x] Add process-level worker test harness: simulated RPC outage, process startup recovery, durable checkpoint, SIGTERM shutdown, and restart resume. CI verification pending.
 - [x] Add a read-only reconciliation CLI comparing token projections with TokenCreated events, factory registry mappings, and market token getters.
 - [ ] Run reconciliation against a deployed testnet factory and verify controlled drift detection.
 

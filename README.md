@@ -16,15 +16,16 @@ MICOW is an independently implemented, testnet-only EVM token launchpad targetin
 - [x] PostgreSQL integration tests pass in CI: duplicate event replay, reorg rollback/replay, and API readiness/token/trade queries.
 - [x] Playwright browser smoke tests pass in CI.
 - [ ] Testnet deployment and explorer verification completed. **BLOCKED** pending protected deployer key, test ETH, and deployment-environment protection review.
-- [x] PostgreSQL atomicity and worker-recovery PRs merged; main CI and security workflows passed on `efa07a522e788c949cd0e67fb274d68db5eab085`.
-- [ ] Merge and verify the on-chain reconciliation PR; CI/security workflows passed on head `4e929a5558874053cc7371ba973f8baeeb276cf0` at last check.
+- [x] PostgreSQL atomicity, worker-recovery, and read-only on-chain reconciliation PRs merged; PR #6 merge commit is `dea1590d4579d2a4ca762c6536e815375ce8fc70`.
+- [ ] Verify post-merge main CI/security workflows for `dea1590d4579d2a4ca762c6536e815375ce8fc70`.
+- [ ] Complete process-level indexer outage/restart acceptance (PR #7 in progress).
 - [ ] Run reconciliation against an actual deployed testnet factory. **BLOCKED** until deployment prerequisites are satisfied.
 
 Never treat this repository as audited or production-ready. Mainnet deployment is out of scope until independent security review and explicit approval.
 
 ## Current phase
 
-**P4 — Indexer and API reliability.** Durable checkpoint resume, worker-cycle retry/shutdown, atomic event/projection/checkpoint persistence, and reorg rollback/replay tests are merged. A read-only on-chain reconciliation CLI is implemented in PR #6; live reconciliation remains pending a deployed factory. P5 local service E2E, P6 testnet deployment, and P8 recovery drills are not complete.
+**P4 — Indexer and API reliability.** Durable checkpoint resume, worker-cycle retry/shutdown, atomic event/projection/checkpoint persistence, and reorg rollback/replay tests are merged. A read-only on-chain reconciliation CLI is merged; live reconciliation remains pending a deployed factory. A process-level RPC outage/restart test is in PR #7; P5 local service E2E, P6 testnet deployment, and P8 recovery drills are not complete.
 
 ## Stack
 

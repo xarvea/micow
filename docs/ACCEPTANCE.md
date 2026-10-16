@@ -1,6 +1,6 @@
 # Acceptance Criteria and Phase Gates
 
-Status as of 2026-10-16: P4 — Indexer and API reliability. Foundation, RPC/API hardening, atomic persistence, and worker restart recovery are merged. CI and security workflows passed on main commit `efa07a522e788c949cd0e67fb274d68db5eab085`. PR #6 adds a read-only reconciliation CLI; its CI/security workflows passed on head `4e929a5558874053cc7371ba973f8baeeb276cf0` at last check, but it is not yet merged. Live reconciliation and deployment remain blocked until a factory is deployed using approved testnet-only credentials and test ETH.
+Status as of 2026-10-16: P4 — Indexer and API reliability. PR #6 is merged to main at `dea1590d4579d2a4ca762c6536e815375ce8fc70`; its PR CI and security checks passed. Post-merge main CI/security verification is running. PR #7 adds a process-level test for simulated RPC outage, startup recovery, durable checkpointing, graceful shutdown, and restart resume; the acceptance gate remains pending until CI passes. Live reconciliation and deployment remain blocked until a factory is deployed using approved testnet-only credentials and test ETH.
 
 ## F0 — Foundation and specification
 
@@ -52,7 +52,7 @@ Status as of 2026-10-16: P4 — Indexer and API reliability. Foundation, RPC/API
 - [x] PostgreSQL failure-injection test proves event and checkpoint writes roll back atomically when projection validation fails.
 - [x] Unit test verifies the worker continues after a transient cycle failure and exits cleanly on shutdown.
 - [x] PostgreSQL integration test verifies restart resumes from the first block after the last durable checkpoint.
-- [ ] Full process-level worker restart/RPC outage end-to-end test.
+- [ ] Process-level worker test passes against isolated PostgreSQL and a simulated unavailable/recovering RPC, including graceful SIGTERM and restart resume (PR #7; CI pending).
 - [x] Add a read-only reconciliation CLI for database projection and on-chain factory/market consistency.
 - [ ] Run reconciliation against a deployed testnet factory and verify controlled drift detection.
 

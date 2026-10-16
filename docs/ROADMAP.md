@@ -5,10 +5,10 @@ Project state as of 2026-10-16: **P4 — Indexer and API reliability**. Testnet-
 ## Current execution snapshot
 
 - **Merged:** foundation, contract baseline, RPC/API hardening, PostgreSQL idempotency/reorg integration, atomic indexer persistence, and worker restart/cycle recovery.
-- **Latest verified main:** `efa07a522e788c949cd0e67fb274d68db5eab085`; CI and security workflows passed.
-- **In progress:** PR #6 adds a read-only reconciliation CLI. CI and security workflows passed on its current head `4e929a5558874053cc7371ba973f8baeeb276cf0` at last check; the PR remains unmerged at this snapshot.
+- **Latest merged main:** `dea1590d4579d2a4ca762c6536e815375ce8fc70` (PR #6); PR CI and security passed, post-merge main verification pending.
+- **In progress:** PR #7 adds a process-level indexer recovery test covering simulated RPC outage, startup recovery, durable checkpointing, graceful shutdown, and restart resume.
 - **Blocked:** live reconciliation and testnet deployment require an actual deployed factory; deployment also requires a protected testnet-only deployer key, test ETH, a reviewed fee recipient, and protected environment reviewers.
-- **Not complete:** process-level RPC outage/restart drill, local full-service E2E, backup/restore drill, independent contract/economic review.
+- **Not complete:** CI acceptance for the process-level test, real provider outage drill, local full-service E2E, backup/restore drill, independent contract/economic review.
 - **Safety boundary:** no mainnet configuration, deployment, or real-value transaction is authorized by this roadmap.
 
 ## Phase 0 — Foundation and specification

@@ -107,6 +107,8 @@ jobs:
         run: pnpm --filter @micow/indexer test:integration
       - name: API PostgreSQL integration tests
         run: pnpm --filter @micow/api test:integration
+      - name: Indexer process-level RPC outage and restart test
+        run: pnpm --filter @micow/indexer test:process
 
   testnet-preflight:
     if: ${{ (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch' }}

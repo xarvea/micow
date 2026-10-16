@@ -86,8 +86,9 @@ The indexer derives its next block from the highest durable checkpoint, so resta
 
     pnpm --filter @micow/indexer test
     pnpm --filter @micow/indexer test:integration
+    pnpm --filter @micow/indexer test:process
 
-The integration test requires an isolated PostgreSQL database via `TEST_DATABASE_URL`. These automated tests do not replace a process-level outage drill against a deliberately unavailable/recovering RPC endpoint.
+Both integration commands require an isolated PostgreSQL database via `TEST_DATABASE_URL`. The process-level test starts the real indexer process against a simulated RPC endpoint, verifies recovery after an initial outage, checks the durable checkpoint, sends SIGTERM, restarts the process, and verifies indexing resumes at the next block. It does not replace a real provider outage drill.
 
 
 ## Read-only on-chain reconciliation
