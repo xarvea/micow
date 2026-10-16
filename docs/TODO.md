@@ -1,6 +1,6 @@
 # MICOW Master TODO
 
-Status snapshot 2026-10-16: PR #28 merged to `main` as `02c314518e64318e6a88a4c76f52daf1fcfa2a5b`. Main CI `38940734418` and security `38940734236` were started on that exact SHA; verify their final conclusions before declaring post-merge gates complete. PR #28 CI `38936723431` and security `38936723423` passed. No deployment transaction was broadcast.
+Status snapshot 2026-10-16: PR #28 merged to `main` as `02c314518e64318e6a88a4c76f52daf1fcfa2a5b`. Main CI `38940734418` and security `38940734236` passed on that exact SHA. PR #28 CI `38936723431` and security `38936723423` passed. No deployment transaction was broadcast.
 
 Status values: PENDING, IN_PROGRESS, BLOCKED, COMPLETED, NOT_VERIFIED. A checked implementation task is not a claim that its acceptance tests passed.
 
