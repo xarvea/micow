@@ -37,7 +37,7 @@ Browser / Next.js
 
 ## Data flow and reliability
 
-The indexer processes logs in canonical order by (block number, transaction index, log index). Each log has a unique key based on chain ID, transaction hash, and log index. A transaction persists event rows and checkpoint updates atomically. Reorg recovery walks back to a common ancestor, deletes/reverts derived records from orphaned blocks, and replays canonical logs. A periodic reconciler compares a bounded sample of indexed token/market state to contract reads.
+The indexer processes logs in canonical order by (block number, transaction index, log index). Each log has a unique key based on chain ID, transaction hash, and log index. A transaction persists event rows and checkpoint updates atomically. Reorg recovery walks back to a common ancestor, deletes/reverts derived records from orphaned blocks, and replays canonical logs. The read-only reconciliation CLI (`pnpm --filter @micow/indexer reconcile`) compares indexed TokenCreated events and token projections with `LaunchpadFactory.marketForToken(token)` and `BondingCurveMarket.token()`. It is operator-triggered, paginates database reads, retries transient RPC reads, and exits non-zero on detected drift or failed verification; it does not mutate database or chain state. A successful live run against a deployed factory is still an acceptance gate.
 
 ## Operational model
 

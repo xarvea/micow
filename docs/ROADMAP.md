@@ -1,6 +1,15 @@
 # MICOW Delivery Roadmap
 
-Project state: active implementation, testnet-only. A phase is complete only when evidence is recorded against its acceptance gate. The project is not audited and is not authorized for mainnet.
+Project state as of 2026-10-16: **P4 — Indexer and API reliability**. Testnet-only. A phase is complete only when evidence is recorded against its acceptance gate. The project is not audited and is not authorized for mainnet.
+
+## Current execution snapshot
+
+- **Merged:** foundation, contract baseline, RPC/API hardening, PostgreSQL idempotency/reorg integration, atomic indexer persistence, and worker restart/cycle recovery.
+- **Latest verified main:** `efa07a522e788c949cd0e67fb274d68db5eab085`; CI and security workflows passed.
+- **In progress:** PR #6 adds a read-only reconciliation CLI. CI and security workflows passed on its current head `4e929a5558874053cc7371ba973f8baeeb276cf0` at last check; the PR remains unmerged at this snapshot.
+- **Blocked:** live reconciliation and testnet deployment require an actual deployed factory; deployment also requires a protected testnet-only deployer key, test ETH, a reviewed fee recipient, and protected environment reviewers.
+- **Not complete:** process-level RPC outage/restart drill, local full-service E2E, backup/restore drill, independent contract/economic review.
+- **Safety boundary:** no mainnet configuration, deployment, or real-value transaction is authorized by this roadmap.
 
 ## Phase 0 — Foundation and specification
 Deliverables: product scope, architecture, threat model, ADRs, provenance, toolchain pins, monorepo layout, CI/security plan.
@@ -19,8 +28,8 @@ Tasks: Next.js App Router; strict TypeScript; responsive dashboard; wallet conne
 Exit gate: lint/typecheck/build pass; wallet flow and wrong-chain flow tested; no signing/custody outside wallet.
 
 ## Phase 4 — Database, indexer, and API
-Tasks: PostgreSQL migrations; block/hash checkpoints; event identity uniqueness; atomic event+projection+checkpoint transactions; idempotent replay; reorg common-ancestor rollback and replay; read-only Fastify endpoints; schema validation; rate limiting; pagination; readiness and reconciliation.
-Exit gate: integration tests prove duplicate replay is harmless, reorgs repair projections, checkpoints are atomic, and indexed reads reconcile to RPC state.
+Tasks: PostgreSQL migrations; block/hash checkpoints; event identity uniqueness; atomic event+projection+checkpoint transactions; idempotent replay; reorg common-ancestor rollback and replay; worker retry/shutdown and durable restart resume; read-only Fastify endpoints; schema validation; rate limiting; pagination; readiness; read-only reconciliation CLI against factory registry and market token getters.
+Exit gate: integration tests prove duplicate replay is harmless, reorgs repair projections, checkpoints are atomic, and projection-vs-event consistency is tested. Full phase exit additionally requires a process-level outage/restart drill and a successful live reconciliation against an actually deployed testnet factory.
 
 ## Phase 5 — Local integration and developer experience
 Tasks: one-command local services; migration and seed tooling; environment validation; end-to-end smoke tests; deterministic ABI/address manifest; troubleshooting.

@@ -60,7 +60,8 @@ Status values: PENDING, IN_PROGRESS, BLOCKED, COMPLETED, NOT_VERIFIED. A checked
 - [x] Extract and test the worker cycle supervisor; verify it resumes after a transient cycle failure and stops cleanly.
 - [x] Add PostgreSQL integration coverage proving a restarted indexer resumes at MAX(checkpoint) + 1.
 - [ ] Add full process-level worker restart/RPC outage end-to-end tests.
-- [ ] Add RPC-to-contract-state reconciliation.
+- [x] Add a read-only reconciliation CLI comparing token projections with TokenCreated events, factory registry mappings, and market token getters.
+- [ ] Run reconciliation against a deployed testnet factory and verify controlled drift detection.
 
 ## P5 — Local integration
 - [x] Add Docker Compose for PostgreSQL.
@@ -73,8 +74,9 @@ Status values: PENDING, IN_PROGRESS, BLOCKED, COMPLETED, NOT_VERIFIED. A checked
 ## P6 — Testnet
 - [x] Add deployment script that asserts chain ID 46630.
 - [x] Add manual deployment workflow with broadcast disabled by default and protected environment.
-- [x] Add main-branch testnet RPC and non-broadcast deployment preflight job (execution pending after merge).
-- [ ] Run the main-branch testnet RPC/deployment simulation and inspect gas output.
+- [x] Add main-branch testnet RPC and non-broadcast deployment preflight job.
+- [x] Verify main-branch testnet RPC/deployment simulation CI passed on `efa07a522e788c949cd0e67fb274d68db5eab085`.
+- [ ] Review deployment simulation gas output and record the reviewed result.
 - [ ] Deploy factory only after contract gates pass. **BLOCKED:** no deployer key or test ETH is available in the execution environment.
 - [ ] Record chain ID, addresses, tx hashes, block numbers, compiler/settings.
 - [ ] Verify contracts on explorer where supported.

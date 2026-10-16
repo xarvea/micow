@@ -1,6 +1,6 @@
 # Testnet Deployment and Verification
 
-**Current status: BLOCKED.** No testnet deployment has been performed. A testnet-only deployer key and test ETH funding are required. Supply `DEPLOYER_PRIVATE_KEY` and `PROTOCOL_FEE_RECIPIENT` through a protected local environment or secret manager; never commit the key or print it in logs.
+**Current status: BLOCKED.** No testnet deployment has been performed. A testnet-only deployer key and test ETH funding are required. Deployment-environment protection and reviewer configuration must be verified before any broadcast. Supply `DEPLOYER_PRIVATE_KEY` and `PROTOCOL_FEE_RECIPIENT` through a protected local environment or secret manager; never commit the key or print it in logs.
 
 ## Network constants
 - Network: Robinhood Chain Testnet
@@ -56,6 +56,6 @@ The repository provides two separate safety paths:
 1. **Main-branch preflight:** on a push to `main`, CI checks that the configured public RPC reports chain ID `46630` and simulates the factory deployment without `--broadcast`. It generates an ephemeral throwaway key; that key is masked, never stored, and never funded.
 2. **Manual deployment:** open **Actions → Deploy MICOW to Robinhood Chain Testnet → Run workflow**. Keep `broadcast=false` for the first run. A real broadcast requires explicitly setting `broadcast=true`, a funded testnet key in the protected `robinhood-testnet` environment, and a non-zero `PROTOCOL_FEE_RECIPIENT` repository/environment variable.
 
-Before enabling broadcast, configure the GitHub `robinhood-testnet` environment with required reviewers and the `DEPLOYER_PRIVATE_KEY` secret. Set `RH_TESTNET_RPC_URL` and `PROTOCOL_FEE_RECIPIENT` as environment variables. Confirm the account has only test ETH and never reuse a mainnet key.
+Before enabling broadcast, verify that the GitHub `robinhood-testnet` environment has required reviewers and the `DEPLOYER_PRIVATE_KEY` secret. Confirm the workflow is the only broadcast entry point, is not triggerable from arbitrary PR code, and enforces the chain-ID guard immediately before broadcasting. Set `RH_TESTNET_RPC_URL` and `PROTOCOL_FEE_RECIPIENT` as environment variables. Confirm the account has only test ETH and never reuse a mainnet key.
 
-A successful broadcast uploads the Foundry run record as a workflow artifact. Record the factory address and transaction/block data from that artifact. Source verification remains a separate gate until the explorer's verification API and parameters are confirmed. The deployment workflow has not been run; no deployed address is currently claimed.
+A successful broadcast uploads the Foundry run record as a workflow artifact. Record the factory address and transaction/block data from that artifact. Source verification remains a separate gate until the explorer's verification API and parameters are confirmed. The deployment workflow has not been run; no deployed address is currently claimed. No Safe 3-of-5 governance arrangement is adopted by the current MVP; see ADR-0005. Mainnet deployment remains explicitly unauthorized.
