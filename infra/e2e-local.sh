@@ -83,7 +83,7 @@ export API_PORT=4000
 export API_HOST=127.0.0.1
 export WEB_ORIGIN="$WEB_URL"
 
-anvil --host 127.0.0.1 --port 8545 --chain-id 46630 >"$LOG_DIR/anvil.log" 2>&1 &
+anvil --host 127.0.0.1 --port 8545 --chain-id 46630 --hardfork cancun >"$LOG_DIR/anvil.log" 2>&1 &
 ANVIL_PID=$!
 wait_for "local Anvil chain 46630" "cast chain-id --rpc-url '$LOCAL_RPC' | grep -qx 46630"
 wait_for "Anvil development key" "grep -q '^Private Keys' \"$LOG_DIR/anvil.log\""
