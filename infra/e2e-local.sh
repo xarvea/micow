@@ -51,10 +51,10 @@ export WEB_ORIGIN="$WEB_URL"
 anvil --host 127.0.0.1 --port 8545 --chain-id 46630 >"$LOG_DIR/anvil.log" 2>&1 &
 ANVIL_PID=$!
 wait_for "local Anvil chain 46630" "cast chain-id --rpc-url '$LOCAL_RPC' | grep -qx 46630"
-wait_for "Anvil development key" "grep -qE 'Private Key: 0x[a-fA-F0-9]{64}' \"$LOG_DIR/anvil.log\""
+wait_for "Anvil development key" "grep -q '^Private Keys' \"$LOG_DIR/anvil.log\""
 
 # Read the ephemeral key printed by the local Anvil process; never store a key in source.
-ANVIL_KEY="$(grep -m1 -Eo 'Private Key: 0x[a-fA-F0-9]{64}' "$LOG_DIR/anvil.log" | awk '{print $3}')"
+ANVIL_KEY="$(grep -A10 '^Private Keys' "$LOG_DIR/anvil.log" | grep -m1 -Eo '0x[a-fA-F0-9]{64}')"
 if [[ ! "$ANVIL_KEY" =~ ^0x[a-fA-F0-9]{64}$ ]]; then echo "ERROR: local Anvil key was not found" >&2; exit 1; fi
 export DEPLOYER_PRIVATE_KEY="$ANVIL_KEY"
 export PROTOCOL_FEE_RECIPIENT="$LOCAL_ADDRESS"
