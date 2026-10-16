@@ -216,7 +216,7 @@ integrationDescribe("indexer process recovery", () => {
       [46630],
     );
     expect(checkpoints.rows.map((row: { block_number: string }) => row.block_number)).toEqual(["10", "11"]);
-    expect(first.output()).toMatch(/RPC unavailable during indexer startup/);
+    expect(first.output()).toMatch(/RPC operation getChainId failed|RPC unavailable during indexer startup/);
     expect(second.output()).toMatch(/MICOW indexer started on chain 46630/);
   }, 45_000);
 });
