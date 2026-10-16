@@ -1,0 +1,132 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$ROOT_DIR"
+
+LOCAL_RPC="${LOCAL_RPC_URL:-http://127.0.0.1:8545}"
+DATABASE_URL="${DATABASE_URL:-postgresql://micow:micow@127.0.0.1:5432/micow}"
+API_URL="${API_URL:-http://127.0.0.1:4000}"
+WEB_URL="${WEB_URL:-http://127.0.0.1:3000}"
+ANVIL_KEY="0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
+LOCAL_ADDRESS="0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266"
+LOG_DIR="${TMPDIR:-/tmp}/micow-p5-e2e"
+mkdir -p "$LOG_DIR"
+
+ANVIL_PID=""
+API_PID=""
+INDEXER_PID=""
+WEB_PID=""
+
+cleanup() {
+  for pid in "$WEB_PID" "$INDEXER_PID" "$API_PID" "$ANVIL_PID"; do
+    if [[ -n "$pid" ]]; then kill "$pid" 2>/dev/null || true; fi
+  done
+  for pid in "$WEB_PID" "$INDEXER_PID" "$API_PID" "$ANVIL_PID"; do
+    if [[ -n "$pid" ]]; then wait "$pid" 2>/dev/null || true; fi
+  done
+}
+trap cleanup EXIT
+
+wait_for() {
+  local name="$1"
+  local command="$2"
+  for _ in $(seq 1 60); do
+    if eval "$command" >/dev/null 2>&1; then
+      printf 'ready: %s\n' "$name"
+      return 0
+    fi
+    sleep 2
+  done
+  printf 'ERROR: timed out waiting for %s\n' "$name" >&2
+  return 1
+}
+
+export DATABASE_URL
+export RH_TESTNET_RPC_URL="$LOCAL_RPC"
+export API_PORT=4000
+export API_HOST=127.0.0.1
+export WEB_ORIGIN="$WEB_URL"
+
+anvil --host 127.0.0.1 --port 8545 --chain-id 46630 --silent >"$LOG_DIR/anvil.log" 2>&1 &
+ANVIL_PID=$!
+wait_for "local Anvil chain 46630" "cast chain-id --rpc-url '$LOCAL_RPC' | grep -qx 46630"
+
+# Local-only development key: this is a public Anvil test key, never a real secret.
+export DEPLOYER_PRIVATE_KEY="$ANVIL_KEY"
+export PROTOCOL_FEE_RECIPIENT="$LOCAL_ADDRESS"
+forge script contracts/script/DeployTestnet.s.sol:DeployTestnet --rpc-url "$LOCAL_RPC" --broadcast -vvv >"$LOG_DIR/deploy.log" 2>&1
+FACTORY_ADDRESS="$(grep -Eo 'LaunchpadFactory[[:space:]]+0x[a-fA-F0-9]{40}' "$LOG_DIR/deploy.log" | tail -n 1 | awk '{print $2}')"
+if [[ ! "$FACTORY_ADDRESS" =~ ^0x[a-fA-F0-9]{40}$ ]]; then
+  cat "$LOG_DIR/deploy.log" >&2
+  echo "ERROR: local factory address not found in deployment output" >&2
+  exit 1
+fi
+DEPLOY_BLOCK=1
+export LAUNCHPAD_FACTORY_ADDRESS="$FACTORY_ADDRESS"
+export INDEXER_START_BLOCK="$DEPLOY_BLOCK"
+export INDEXER_CONFIRMATIONS=0
+export INDEXER_BATCH_SIZE=100
+
+# A bounded retry makes database readiness failures explicit instead of silently skipping E2E.
+migration_ok=false
+for _ in $(seq 1 30); do
+  if pnpm --filter @micow/api db:migrate >"$LOG_DIR/migrate.log" 2>&1; then
+    migration_ok=true
+    break
+  fi
+  sleep 2
+done
+if [[ "$migration_ok" != true ]]; then
+  cat "$LOG_DIR/migrate.log" >&2
+  echo "ERROR: database migration failed" >&2
+  exit 1
+fi
+
+pnpm --filter @micow/api exec tsx src/server.ts >"$LOG_DIR/api.log" 2>&1 &
+API_PID=$!
+pnpm --filter @micow/indexer exec tsx src/main.ts >"$LOG_DIR/indexer.log" 2>&1 &
+INDEXER_PID=$!
+export NEXT_PUBLIC_LAUNCHPAD_FACTORY_ADDRESS="$FACTORY_ADDRESS"
+export NEXT_PUBLIC_ROBINHOOD_RPC_URL="$LOCAL_RPC"
+pnpm --filter @micow/web dev >"$LOG_DIR/web.log" 2>&1 &
+WEB_PID=$!
+
+wait_for "API health" "curl -fsS '$API_URL/health'"
+wait_for "web server" "curl -fsS '$WEB_URL' | grep -q 'Launch ideas'"
+
+CREATE_RECEIPT="$(cast send "$FACTORY_ADDRESS" 'createToken(string,string,string)' 'P5 E2E Token' 'P5E2E' 'ipfs://p5-e2e' --value 0.0006ether --private-key "$ANVIL_KEY" --rpc-url "$LOCAL_RPC" --json)"
+TOKEN_ADDRESS="$(printf '%s' "$CREATE_RECEIPT" | jq -r '[.logs[] | select((.topics | length) >= 4)][0].topics[2] | "0x" + .[26:]')"
+MARKET_ADDRESS="$(printf '%s' "$CREATE_RECEIPT" | jq -r '[.logs[] | select((.topics | length) >= 4)][0].topics[3] | "0x" + .[26:]')"
+if [[ ! "$TOKEN_ADDRESS" =~ ^0x[a-fA-F0-9]{40}$ || ! "$MARKET_ADDRESS" =~ ^0x[a-fA-F0-9]{40}$ ]]; then
+  printf '%s\n' "$CREATE_RECEIPT" >&2
+  echo "ERROR: TokenCreated addresses could not be parsed from local receipt" >&2
+  exit 1
+fi
+
+DEADLINE=4102444800
+cast send "$MARKET_ADDRESS" 'buy(uint256,uint256)' 0 "$DEADLINE" --value 0.1ether --private-key "$ANVIL_KEY" --rpc-url "$LOCAL_RPC" --json >"$LOG_DIR/buy.json"
+cast send "$TOKEN_ADDRESS" 'approve(address,uint256)' "$MARKET_ADDRESS" 1000000000000000000000000 --private-key "$ANVIL_KEY" --rpc-url "$LOCAL_RPC" --json >"$LOG_DIR/approve.json"
+cast send "$MARKET_ADDRESS" 'sell(uint256,uint256,uint256)' 1000000000000000000000000 0 "$DEADLINE" --private-key "$ANVIL_KEY" --rpc-url "$LOCAL_RPC" --json >"$LOG_DIR/sell.json"
+
+tokens_json=""
+trades_json=""
+for _ in $(seq 1 60); do
+  tokens_json="$(curl -fsS "$API_URL/v1/tokens?limit=100&offset=0" 2>/dev/null || true)"
+  if printf '%s' "$tokens_json" | jq -e --arg token "$TOKEN_ADDRESS" '[.items[] | select((.token_address | ascii_downcase) == ($token | ascii_downcase) and .symbol == "P5E2E")] | length == 1' >/dev/null 2>&1; then
+    trades_json="$(curl -fsS "$API_URL/v1/tokens/$TOKEN_ADDRESS/trades?limit=10&offset=0" 2>/dev/null || true)"
+    if printf '%s' "$trades_json" | jq -e '.items | length == 2 and (map(.side) | sort == ["buy","sell"])' >/dev/null 2>&1; then
+      break
+    fi
+  fi
+  sleep 2
+done
+
+printf '%s' "$tokens_json" | jq -e --arg token "$TOKEN_ADDRESS" '[.items[] | select((.token_address | ascii_downcase) == ($token | ascii_downcase) and .symbol == "P5E2E")] | length == 1' >/dev/null
+printf '%s' "$trades_json" | jq -e '.items | length == 2 and (map(.side) | sort == ["buy","sell"])' >/dev/null
+
+# Verify the persisted event and projection counts, not just HTTP success.
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -Atc "SELECT CASE WHEN (SELECT COUNT(*) FROM tokens WHERE chain_id=46630 AND lower(token_address)=lower('$TOKEN_ADDRESS'))=1 AND (SELECT COUNT(*) FROM trades WHERE chain_id=46630 AND lower(token_address)=lower('$TOKEN_ADDRESS'))=2 AND (SELECT COUNT(*) FROM indexed_events WHERE chain_id=46630 AND event_name IN ('TokenCreated','Buy','Sell')) >= 3 THEN 'PASS' ELSE 'FAIL' END" | grep -qx PASS
+
+echo "PASS: local chain 46630, factory deployment, create/buy/sell, API/web readiness, and indexed projections"
+echo "factory=$FACTORY_ADDRESS token=$TOKEN_ADDRESS market=$MARKET_ADDRESS"
