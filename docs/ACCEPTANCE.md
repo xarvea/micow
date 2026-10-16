@@ -1,6 +1,6 @@
 # Acceptance Criteria and Phase Gates
 
-The merged foundation and PostgreSQL integration baseline passed CI. The reliability-hardening baseline is merged. The next phase adds a production-used transaction helper and a PostgreSQL failure-injection regression test; recheck CI before merging this phase. Actual deployment remains blocked until a protected testnet key and test ETH are available.
+The foundation, reliability hardening, and atomic indexer persistence phases are merged. CI passed on the latest main commit. The current phase adds durable checkpoint resume and worker-cycle recovery tests. Actual deployment remains blocked until a protected testnet key and test ETH are available.
 
 ## F0 — Foundation and specification
 
@@ -50,7 +50,9 @@ The merged foundation and PostgreSQL integration baseline passed CI. The reliabi
 - [x] Token and trade pagination use deterministic tie-breakers.
 - [x] Query validation, bounded pagination, parameterized SQL, rate-limit behavior, and bounded RPC retry are tested.
 - [x] PostgreSQL failure-injection test proves event and checkpoint writes roll back atomically when projection validation fails.
-- [ ] Worker restart/RPC outage end-to-end test and RPC-to-contract-state reconciliation.
+- [x] Unit test verifies the worker continues after a transient cycle failure and exits cleanly on shutdown.
+- [x] PostgreSQL integration test verifies restart resumes from the first block after the last durable checkpoint.
+- [ ] Full process-level worker restart/RPC outage end-to-end test and RPC-to-contract-state reconciliation.
 
 ## D1 — Testnet deployment
 
@@ -70,6 +72,6 @@ The merged foundation and PostgreSQL integration baseline passed CI. The reliabi
 - [x] Web/API/indexer lint, typecheck, unit tests, browser tests, and production build pass on the merged baseline.
 - [x] PostgreSQL idempotency/reorg/API integration job passes on the merged baseline.
 - [x] Dependency audit, CodeQL, Gitleaks, and pinned Actions pass on the merged baseline.
-- [ ] Verify all gates on the reliability-hardening branch.
+- [x] Verify all gates on the reliability-hardening branch and atomicity phase.
 - [ ] Independent contract/economic review and remediation of any findings.
 

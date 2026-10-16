@@ -57,7 +57,9 @@ Status values: PENDING, IN_PROGRESS, BLOCKED, COMPLETED, NOT_VERIFIED. A checked
 - [x] Add a rate-limit behavior test using a low configured API limit.
 - [x] Add PostgreSQL tests for duplicate event replay, reorg rollback, and canonical replay.
 - [x] Add bounded RPC retry with exponential backoff and unit tests; RPC errors cannot be mistaken for a missing reorg ancestor.
-- [ ] Add worker restart/RPC outage end-to-end tests.
+- [x] Extract and test the worker cycle supervisor; verify it resumes after a transient cycle failure and stops cleanly.
+- [x] Add PostgreSQL integration coverage proving a restarted indexer resumes at MAX(checkpoint) + 1.
+- [ ] Add full process-level worker restart/RPC outage end-to-end tests.
 - [ ] Add RPC-to-contract-state reconciliation.
 
 ## P5 — Local integration

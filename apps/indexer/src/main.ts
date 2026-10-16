@@ -2,7 +2,8 @@ import dotenv from "dotenv";
 import { Pool, type PoolClient } from "pg";
 import { createPublicClient, decodeEventLog, defineChain, http, parseAbi, toEventSelector, type Address, type Hex } from "viem";
 import { eventIdentity, findCommonAncestor, type StoredBlock } from "./reorg.js";
-import { inTransaction, insertIndexedEvent, rollbackAfter } from "./store.js";
+import { getNextBlock, inTransaction, insertIndexedEvent, rollbackAfter } from "./store.js";
+import { runWorkerLoop } from "./worker.js";
 import { withRpcRetry } from "./retry.js";
 
 dotenv.config({ path: process.env.DOTENV_CONFIG_PATH ?? "../../.env" });
@@ -145,10 +146,7 @@ async function persistBlock(blockNumber: bigint, blockHash: Hex, parentHash: Hex
 
 async function syncOnce(): Promise<void> {
   await repairReorg();
-  const last = await pool.query("SELECT MAX(block_number)::text AS block_number FROM indexed_blocks WHERE chain_id = $1", [chainId]);
-  const nextBlock = last.rows[0]?.block_number === null || last.rows[0]?.block_number === undefined
-    ? BigInt(startBlock)
-    : BigInt(last.rows[0].block_number) + 1n;
+  const nextBlock = await getNextBlock(pool, chainId, BigInt(startBlock));
   const head = await retryRpc("getBlockNumber", () => client.getBlockNumber());
   const safeHead = head - BigInt(confirmations);
   if (safeHead < nextBlock) return;
@@ -189,11 +187,13 @@ async function main(): Promise<void> {
   if (!running) return;
   if (actualChainId !== chainId) throw new Error("Wrong RPC chain id: expected 46630, got " + actualChainId);
   console.info("MICOW indexer started on chain " + chainId + " with factory " + factoryAddress);
-  while (running) {
-    try { await syncOnce(); }
-    catch (error) { console.error("Indexer cycle failed; retrying without advancing a failed checkpoint.", error); }
-    if (running) await new Promise((resolve) => setTimeout(resolve, 4_000));
-  }
+  await runWorkerLoop({
+    shouldRun: () => running,
+    runOnce: syncOnce,
+    sleep: (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds)),
+    intervalMs: 4_000,
+    onError: (error) => console.error("Indexer cycle failed; retrying without advancing a failed checkpoint.", error),
+  });
 }
 
 main().catch((error: unknown) => {

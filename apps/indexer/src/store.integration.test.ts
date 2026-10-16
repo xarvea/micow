@@ -2,7 +2,7 @@ import { readFile } from "node:fs/promises";
 import { Pool } from "pg";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { eventIdentity } from "./reorg.js";
-import { inTransaction, insertIndexedEvent, rollbackAfter } from "./store.js";
+import { getNextBlock, inTransaction, insertIndexedEvent, rollbackAfter } from "./store.js";
 
 const databaseUrl = process.env.TEST_DATABASE_URL;
 const integrationDescribe = describe.skipIf(!databaseUrl);
@@ -25,6 +25,16 @@ integrationDescribe("PostgreSQL indexer persistence", () => {
 
   afterAll(async () => {
     await pool?.end();
+  });
+
+  it("resumes from the first uncommitted block after a worker restart", async () => {
+    expect(await getNextBlock(pool, 46630, 7n)).toBe(7n);
+    await pool.query(
+      "INSERT INTO indexed_blocks (chain_id, block_number, block_hash, parent_hash) VALUES ($1, 7, $2, $3), ($1, 8, $4, $2)",
+      [46630, "0xblock7", "0xblock6", "0xblock8"],
+    );
+    // A restarted process has only the durable database checkpoint to resume from.
+    expect(await getNextBlock(pool, 46630, 7n)).toBe(9n);
   });
 
   it("inserts the same event idempotently", async () => {
