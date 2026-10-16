@@ -1,6 +1,6 @@
 # Acceptance Criteria and Phase Gates
 
-Status as of 2026-10-16: P4 — Indexer and API reliability. Main snapshot after PR #7 merge is `383dd1f7e2718b2b5977ec83a8fe809f1300045c`. PR #6 reconciliation CLI and PR #7 process-level recovery test are merged. PR #7 CI `38837255615` and security `38837255569` passed on the PR head before merge. Post-merge main CI/security runs `38837434400` and `38837434374` were queued at last check. Live reconciliation and deployment remain blocked until a factory is deployed using approved testnet-only credentials and test ETH.
+Status as of 2026-10-16: P4 — Indexer and API reliability. Current main snapshot is `61f4fe5a7041d403716768e867ab7674c463a94c` (PR #9 merged). Post-merge main CI run `38837722074` and security run `38837722123` both passed. PR #7 process-level recovery test passed on its PR head and post-merge main CI also passed. Live reconciliation and deployment remain blocked until a factory is deployed using approved testnet-only credentials and test ETH.
 
 ## F0 — Foundation and specification
 
