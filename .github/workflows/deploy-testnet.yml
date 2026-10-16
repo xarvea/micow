@@ -22,7 +22,7 @@ jobs:
       RH_TESTNET_RPC_URL: ${{ vars.RH_TESTNET_RPC_URL || 'https://rpc.testnet.chain.robinhood.com' }}
     steps:
       - name: Require main ref for broadcast requests
-        if: ${{ inputs.broadcast && github.ref == 'refs/heads/main' }}
+        if: ${{ inputs.broadcast }}
         shell: bash
         run: |
           set -euo pipefail
@@ -55,7 +55,7 @@ jobs:
 
   deploy:
     name: Broadcast testnet deployment
-    if: ${{ inputs.broadcast }}
+    if: ${{ inputs.broadcast && github.ref == 'refs/heads/main' }}
     needs: preflight
     runs-on: ubuntu-latest
     timeout-minutes: 15
