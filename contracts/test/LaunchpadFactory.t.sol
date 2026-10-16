@@ -6,6 +6,12 @@ import {LaunchpadFactory} from "../src/LaunchpadFactory.sol";
 import {LaunchToken} from "../src/LaunchToken.sol";
 import {BondingCurveMarket} from "../src/BondingCurveMarket.sol";
 
+contract ForceEther {
+    constructor(address payable target) payable {
+        selfdestruct(target);
+    }
+}
+
 contract LaunchpadFactoryTest is Test {
     LaunchpadFactory internal factory;
     address internal protocolFeeRecipient;
@@ -74,6 +80,27 @@ contract LaunchpadFactoryTest is Test {
         vm.prank(creator);
         vm.expectRevert(LaunchpadFactory.UnauthorizedTreasury.selector);
         factory.withdrawTreasuryFees();
+    }
+
+    function testForcedEtherDoesNotIncreaseTreasuryLiability() public {
+        new ForceEther{value: 1 ether}(payable(address(factory)));
+
+        assertEq(address(factory).balance, 1 ether);
+        assertEq(factory.totalClaimableTreasuryFees(), 0);
+        assertEq(factory.claimableTreasuryFees(protocolFeeRecipient), 0);
+
+        vm.prank(creator);
+        factory.createToken{value: factory.CREATION_FEE()}("Micow Test", "MCWT", "ipfs://example-metadata");
+
+        assertEq(address(factory).balance, 1 ether + factory.CREATION_FEE());
+        assertEq(factory.totalClaimableTreasuryFees(), factory.CREATION_FEE());
+
+        vm.prank(protocolFeeRecipient);
+        factory.withdrawTreasuryFees();
+
+        // Forced ETH is surplus, not a treasury liability, and remains in the factory.
+        assertEq(factory.totalClaimableTreasuryFees(), 0);
+        assertEq(address(factory).balance, 1 ether);
     }
 
     function testCreationFailureDoesNotAccrueFee() public {
