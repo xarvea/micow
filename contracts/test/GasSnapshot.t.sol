@@ -6,6 +6,11 @@ import {LaunchpadFactory} from "../src/LaunchpadFactory.sol";
 import {LaunchToken} from "../src/LaunchToken.sol";
 import {BondingCurveMarket} from "../src/BondingCurveMarket.sol";
 
+/// @dev Foundry 1.8.5 supports this cheatcode, while the pinned forge-std Vm interface may not expose it yet.
+interface IGasSnapshotVm {
+    function snapshotGasLastFrame(string calldata name) external returns (uint256 gasUsed);
+}
+
 /// @notice Emits operation-level gas measurements. Values are collected from forge test -vvv
 /// under the pinned foundry.toml compiler/EVM/optimizer settings; they are not CI thresholds.
 contract GasSnapshotTest is Test {
@@ -37,7 +42,7 @@ contract GasSnapshotTest is Test {
     function testGas_FactoryDeployment() public {
         address recipient = makeAddr("gas-deploy-recipient");
         LaunchpadFactory deployed = new LaunchpadFactory(recipient);
-        uint256 gasUsed = vm.snapshotGasLastFrame("factory_deployment");
+        uint256 gasUsed = IGasSnapshotVm(address(vm)).snapshotGasLastFrame("factory_deployment");
         vm.expectRevert(LaunchpadFactory.UnauthorizedTreasury.selector);
         deployed.withdrawTreasuryFees();
         assertGt(address(deployed).code.length, 0);
@@ -48,14 +53,14 @@ contract GasSnapshotTest is Test {
         uint256 creationFee = factory.CREATION_FEE();
         vm.prank(creator);
         factory.createToken{value: creationFee}("Gas Token", "GT", "ipfs://gas-token");
-        uint256 gasUsed = vm.snapshotGasLastFrame("token_creation_including_token_and_market");
+        uint256 gasUsed = IGasSnapshotVm(address(vm)).snapshotGasLastFrame("token_creation_including_token_and_market");
         emit log_named_uint("gas.token_creation_including_token_and_market", gasUsed);
     }
 
     function testGas_Buy() public {
         vm.prank(trader);
         market.buy{value: 0.1 ether}(0, block.timestamp);
-        uint256 gasUsed = vm.snapshotGasLastFrame("buy");
+        uint256 gasUsed = IGasSnapshotVm(address(vm)).snapshotGasLastFrame("buy");
         emit log_named_uint("gas.buy", gasUsed);
     }
 
@@ -68,7 +73,7 @@ contract GasSnapshotTest is Test {
 
         vm.prank(trader);
         market.sell(amount, 0, block.timestamp);
-        uint256 gasUsed = vm.snapshotGasLastFrame("sell");
+        uint256 gasUsed = IGasSnapshotVm(address(vm)).snapshotGasLastFrame("sell");
         emit log_named_uint("gas.sell", gasUsed);
     }
 
@@ -78,14 +83,14 @@ contract GasSnapshotTest is Test {
 
         vm.prank(protocolFeeRecipient);
         market.withdrawFees();
-        uint256 gasUsed = vm.snapshotGasLastFrame("market_fee_withdrawal");
+        uint256 gasUsed = IGasSnapshotVm(address(vm)).snapshotGasLastFrame("market_fee_withdrawal");
         emit log_named_uint("gas.market_fee_withdrawal", gasUsed);
     }
 
     function testGas_TreasuryCreationFeeWithdrawal() public {
         vm.prank(protocolFeeRecipient);
         factory.withdrawTreasuryFees();
-        uint256 gasUsed = vm.snapshotGasLastFrame("treasury_creation_fee_withdrawal");
+        uint256 gasUsed = IGasSnapshotVm(address(vm)).snapshotGasLastFrame("treasury_creation_fee_withdrawal");
         emit log_named_uint("gas.treasury_creation_fee_withdrawal", gasUsed);
     }
 }
