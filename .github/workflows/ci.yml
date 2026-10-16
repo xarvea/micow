@@ -151,6 +151,27 @@ jobs:
           cache: pnpm
       - name: Install workspace
         run: pnpm install --frozen-lockfile
+      - name: Verify local E2E endpoint guard
+        shell: bash
+        run: |
+          set -euo pipefail
+          MICOW_E2E_GUARD_ONLY=1 bash infra/e2e-local.sh
+          if MICOW_E2E_GUARD_ONLY=1 LOCAL_RPC_URL=https://rpc.testnet.chain.robinhood.com bash infra/e2e-local.sh; then
+            echo "ERROR: external RPC endpoint was not rejected" >&2
+            exit 1
+          fi
+          if MICOW_E2E_GUARD_ONLY=1 DATABASE_URL=postgresql://micow:micow@db.example.com:5432/micow bash infra/e2e-local.sh; then
+            echo "ERROR: external database endpoint was not rejected" >&2
+            exit 1
+          fi
+          if MICOW_E2E_GUARD_ONLY=1 API_URL=https://example.com bash infra/e2e-local.sh; then
+            echo "ERROR: external API URL was not rejected" >&2
+            exit 1
+          fi
+          if MICOW_E2E_GUARD_ONLY=1 WEB_URL=https://example.com bash infra/e2e-local.sh; then
+            echo "ERROR: external web URL was not rejected" >&2
+            exit 1
+          fi
       - name: Run local full-service E2E
         run: bash infra/e2e-local.sh
 
