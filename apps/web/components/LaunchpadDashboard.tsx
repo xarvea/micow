@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useAccount, useWaitForTransactionReceipt, useWriteContract } from "wagmi";
-import { isAddress, type Address } from "viem";
+import { isAddress, parseEther, type Address } from "viem";
 import { factoryAbi } from "@/lib/abis";
 import { validateTokenDraft } from "@/lib/validation";
 import { TokenCard } from "@/components/TokenCard";
@@ -64,6 +64,7 @@ export function LaunchpadDashboard() {
       abi: factoryAbi,
       functionName: "createToken",
       args: [name.trim(), symbol.trim(), metadataURI.trim()],
+      value: parseEther("0.0006"),
       chainId: 46630,
     });
   }
@@ -83,7 +84,7 @@ export function LaunchpadDashboard() {
         <label>Symbol<input maxLength={12} onChange={(event) => setSymbol(event.target.value.toUpperCase())} placeholder="MICOW" value={symbol} /></label>
         <label className="metadata-field">Metadata URI<input onChange={(event) => setMetadataURI(event.target.value)} placeholder="ipfs://… or https://…" value={metadataURI} /></label>
       </div>
-      {validationError ? <p className="form-hint">{validationError}</p> : <p className="form-hint">Metadata is stored as a URI; this app does not fetch or render remote HTML.</p>}
+      {validationError ? <p className="form-hint">{validationError}</p> : <p className="form-hint">Creation fee: 0.0006 ETH, credited to the configured treasury for later withdrawal. Metadata is stored as a URI; this app does not fetch or render remote HTML.</p>}
       <button className="button button-primary" disabled={!factoryAddress || !isConnected || chainId !== 46630 || Boolean(validationError) || create.isPending || receipt.isLoading} onClick={submitCreate} type="button">
         {create.isPending ? "Confirm in wallet…" : receipt.isLoading ? "Waiting for confirmation…" : "Create fixed-supply token"}
       </button>
