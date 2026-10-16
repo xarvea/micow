@@ -51,17 +51,13 @@ contract MarketEconomicReviewTest is Test {
         vm.deal(creator, 1 ether);
 
         vm.prank(creator);
-        (address tokenAddress, address marketAddress) = factory.createToken{value: factory.CREATION_FEE()}(
-            "Economic Review", "ECON", "ipfs://economic-review"
-        );
+        (address tokenAddress, address marketAddress) =
+            factory.createToken{value: factory.CREATION_FEE()}("Economic Review", "ECON", "ipfs://economic-review");
         token = LaunchToken(tokenAddress);
         market = BondingCurveMarket(payable(marketAddress));
     }
 
-    function testFuzz_BuyAndSellQuotesMatchExecutionAndAccounting(
-        uint96 rawBuyAmount,
-        uint96 rawSellAmount
-    ) public {
+    function testFuzz_BuyAndSellQuotesMatchExecutionAndAccounting(uint96 rawBuyAmount, uint96 rawSellAmount) public {
         uint256 buyAmount = bound(uint256(rawBuyAmount), 1e12, 1 ether);
         vm.deal(trader, buyAmount);
 
@@ -98,8 +94,7 @@ contract MarketEconomicReviewTest is Test {
 
         assertEq(actualEthOut, quotedEthOut, "sell quote differs from execution");
         assertEq(
-            ethReserveBeforeSell - market.realEthReserve(),
-            quotedEthOut + quotedProtocolSellFee + quotedCreatorSellFee
+            ethReserveBeforeSell - market.realEthReserve(), quotedEthOut + quotedProtocolSellFee + quotedCreatorSellFee
         );
         assertEq(market.realTokenReserve() - tokenReserveBeforeSell, sellAmount);
         assertEq(market.claimableFees(protocolFeeRecipient) - protocolFeesBeforeSell, quotedProtocolSellFee);
@@ -171,8 +166,7 @@ contract MarketEconomicReviewTest is Test {
         assertEq(rejectingMarket.claimableFees(address(rejector)), claimableBefore);
         assertEq(rejectingMarket.totalClaimableFees(), totalBefore);
         assertEq(
-            address(rejectingMarket).balance,
-            rejectingMarket.realEthReserve() + rejectingMarket.totalClaimableFees()
+            address(rejectingMarket).balance, rejectingMarket.realEthReserve() + rejectingMarket.totalClaimableFees()
         );
     }
 }
