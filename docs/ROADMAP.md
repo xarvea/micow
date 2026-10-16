@@ -5,7 +5,7 @@ Project state as of 2026-10-16: **P4 — Indexer and API reliability**. Testnet-
 ## Current execution snapshot
 
 - **Merged:** foundation, contract baseline, RPC/API hardening, PostgreSQL idempotency/reorg integration, atomic indexer persistence, and worker restart/cycle recovery.
-- **Current main snapshot:** `61f4fe5a7041d403716768e867ab7674c463a94c` (PR #9 merged). Post-merge CI `38837722074` and security `38837722123` passed; this does not establish deployment readiness.
+- **Current main snapshot:** `7baf9838164f9817ca3c880a1096aa3f6d056435` (PR #11 merged). Main CI `38875916343` and security `38875916097` passed; this does not establish deployment readiness.
 - **Merged:** PR #6 read-only reconciliation CLI, PR #7 process-level outage/restart acceptance, and PR #8 fee-policy proposal documentation.
 - **PR #7 verification:** CI run `38837255615` and security run `38837255569` passed on the latest PR head before merge. Post-merge main CI/security runs `38837434400` and `38837434374` were queued at last check; verify their final results before release decisions.
 - **Blocked:** live reconciliation and testnet deployment require an actual deployed factory; deployment also requires a protected testnet-only deployer key, test ETH, a reviewed fee recipient, and protected environment reviewers.
@@ -18,7 +18,7 @@ Exit gate: scope and interfaces documented; secrets absent; reproducible toolcha
 
 ## Fee architecture gate (cross-cutting)
 
-The source audit is complete and fee policy is recorded in ADR-0006. Current contracts use immutable 100 bps protocol + 100 bps creator fees; creation is non-payable, and graduation/controller/DEX fee collection are absent. The finalized future policy is 0.0006 ETH creation, 0.0006 ETH graduation when implemented, and 130 bps curve buy/sell (100 bps treasury + 30 bps creator), global-live config, 500 bps trading cap, 0.01 ETH fixed-fee cap, and 24-hour delayed updates. The controller is not implemented. Existing immutable markets cannot be retrofitted; deploy a compatible controller/factory/market bundle only after tests and independent review. Uniswap v4 fees remain out of scope pending verification.
+The source audit is complete and fee policy is recorded in ADR-0006. Current markets use immutable 100 bps protocol + 100 bps creator fees. PR #11 implements the exact 0.0006 ETH creation fee with treasury-only pull accounting and guarded withdrawal; graduation/controller/DEX fee collection remain absent. The finalized future policy is 0.0006 ETH creation, 0.0006 ETH graduation when implemented, and 130 bps curve buy/sell (100 bps treasury + 30 bps creator), global-live config, 500 bps trading cap, 0.01 ETH fixed-fee cap, and 24-hour delayed updates. The controller is not implemented. Existing immutable markets cannot be retrofitted; deploy a compatible controller/factory/market bundle only after tests and independent review. Uniswap v4 fees remain out of scope pending verification.
 
 ## Phase 1 — Smart contracts
 Tasks: fixed-supply ERC-20; atomic factory; constant-product curve; conservative integer rounding; virtual/real reserve separation; slippage/deadline; bounded fee configuration and hard cap; current contracts use immutable fee settings, while the proposed mutable on-chain controller is not implemented; pull-based fee withdrawal; reentrancy protection; event schema; deployment guard.
