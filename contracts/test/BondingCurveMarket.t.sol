@@ -16,8 +16,15 @@ contract RejectingFeeRecipient {
         payable
         returns (address tokenAddress, address marketAddress, uint256 tokensOut)
     {
-        (tokenAddress, marketAddress) = factory.createToken("Rejecting Creator", "REJ", "ipfs://rejecting");
-        tokensOut = BondingCurveMarket(payable(marketAddress)).buy{value: msg.value}(0, block.timestamp);
+        (tokenAddress, marketAddress) =
+            factory.createToken{value: 0.0006 ether}("Rejecting Creator", "REJ", "ipfs://rejecting");
+        tokensOut = BondingCurveMarket(payable(marketAddress)).buy{value: msg.value - factory.CREATION_FEE()}(
+            0, block.timestamp
+        );
+    }
+
+    function withdrawFactoryFees(LaunchpadFactory factory) external {
+        factory.withdrawTreasuryFees();
     }
 }
 
@@ -30,15 +37,19 @@ contract ReentrantFeeRecipient {
 
     function createAndBuy(LaunchpadFactory factory) external payable returns (BondingCurveMarket createdMarket) {
         (address tokenAddress, address marketAddress) =
-            factory.createToken("Reentrant Creator", "RENT", "ipfs://reentrant");
+            factory.createToken{value: factory.CREATION_FEE()}("Reentrant Creator", "RENT", "ipfs://reentrant");
         require(tokenAddress != address(0), "NO_TOKEN");
         market = BondingCurveMarket(payable(marketAddress));
         createdMarket = market;
-        market.buy{value: msg.value}(0, block.timestamp);
+        market.buy{value: msg.value - factory.CREATION_FEE()}(0, block.timestamp);
     }
 
     function withdraw() external {
         market.withdrawFees();
+    }
+
+    function withdrawFactoryFees(LaunchpadFactory factory) external {
+        factory.withdrawTreasuryFees();
     }
 }
 
@@ -54,10 +65,12 @@ contract BondingCurveMarketTest is Test {
         protocolFeeRecipient = makeAddr("protocol");
         creator = makeAddr("creator");
         trader = makeAddr("trader");
+        vm.deal(creator, 1 ether);
         LaunchpadFactory factory = new LaunchpadFactory(protocolFeeRecipient);
+        uint256 creationFee = factory.CREATION_FEE();
         vm.prank(creator);
         (address tokenAddress, address marketAddress) =
-            factory.createToken("Micow Test", "MCWT", "ipfs://example-metadata");
+            factory.createToken{value: creationFee}("Micow Test", "MCWT", "ipfs://example-metadata");
         token = LaunchToken(tokenAddress);
         market = BondingCurveMarket(payable(marketAddress));
         vm.deal(trader, 10 ether);
@@ -145,6 +158,19 @@ contract BondingCurveMarketTest is Test {
         assertEq(
             address(rejectingMarket).balance, rejectingMarket.realEthReserve() + rejectingMarket.totalClaimableFees()
         );
+    }
+
+    function testRejectingTreasuryCannotBlockCreationAndKeepsLiabilityOnFailedWithdrawal() public {
+        RejectingFeeRecipient rejector = new RejectingFeeRecipient();
+        LaunchpadFactory rejectingFactory = new LaunchpadFactory(address(rejector));
+        vm.deal(address(this), 1 ether);
+        rejector.createAndBuy{value: 0.1 ether}(rejectingFactory);
+
+        assertEq(rejectingFactory.claimableTreasuryFees(address(rejector)), rejectingFactory.CREATION_FEE());
+        vm.expectRevert(LaunchpadFactory.TreasuryFeeWithdrawalFailed.selector);
+        rejector.withdrawFactoryFees(rejectingFactory);
+        assertEq(rejectingFactory.claimableTreasuryFees(address(rejector)), rejectingFactory.CREATION_FEE());
+        assertEq(rejectingFactory.totalClaimableTreasuryFees(), rejectingFactory.CREATION_FEE());
     }
 
     function testFeeWithdrawalCannotReenter() public {

@@ -1,10 +1,16 @@
 import { parseAbi } from "viem";
 
 export const factoryAbi = parseAbi([
-  "function createToken(string name_, string symbol_, string metadataURI_) returns (address tokenAddress, address marketAddress)",
+  "function CREATION_FEE() view returns (uint256)",
+  "function createToken(string name_, string symbol_, string metadataURI_) payable returns (address tokenAddress, address marketAddress)",
+  "function claimableTreasuryFees(address recipient) view returns (uint256 amount)",
+  "function totalClaimableTreasuryFees() view returns (uint256)",
+  "function withdrawTreasuryFees() returns (uint256 amount)",
   "function marketForToken(address token) view returns (address market)",
   "function protocolFeeRecipient() view returns (address)",
   "event TokenCreated(address indexed creator,address indexed token,address indexed market,string name,string symbol,uint256 totalSupply,string metadataURI)",
+  "event CreationFeeAccrued(address indexed treasury,address indexed creator,uint256 amount)",
+  "event TreasuryFeesWithdrawn(address indexed treasury,uint256 amount)",
 ]);
 
 export const marketAbi = parseAbi([
