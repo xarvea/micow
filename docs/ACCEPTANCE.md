@@ -1,6 +1,6 @@
 # Acceptance Criteria and Phase Gates
 
-Status as of 2026-10-16: P4 — Indexer and API reliability. PR #6 is merged to main at `dea1590d4579d2a4ca762c6536e815375ce8fc70`; its PR CI and security checks passed. Post-merge main CI/security verification is running. PR #7 adds a process-level test for simulated RPC outage, startup recovery, durable checkpointing, graceful shutdown, and restart resume; the acceptance gate remains pending until CI passes. Live reconciliation and deployment remain blocked until a factory is deployed using approved testnet-only credentials and test ETH.
+Status as of 2026-10-16: P4 — Indexer and API reliability. Main snapshot after PR #7 merge is `383dd1f7e2718b2b5977ec83a8fe809f1300045c`. PR #6 reconciliation CLI and PR #7 process-level recovery test are merged. PR #7 CI `38837255615` and security `38837255569` passed on the PR head before merge. Post-merge main CI/security runs `38837434400` and `38837434374` were queued at last check. Live reconciliation and deployment remain blocked until a factory is deployed using approved testnet-only credentials and test ETH.
 
 ## F0 — Foundation and specification
 
@@ -16,7 +16,8 @@ Status as of 2026-10-16: P4 — Indexer and API reliability. PR #6 is merged to 
 - [x] Factory creates a token and dedicated market atomically and emits creation events.
 - [x] Buy/sell quote and execution match within tested rounding rules.
 - [x] Minimum output and deadline checks are enforced.
-- [x] Fee rates/recipients are immutable; combined fees are bounded to 500 bps.
+- [x] **Current code baseline:** fee rates/recipients are immutable; combined fees are bounded to 500 bps.
+- [ ] **Requested future configuration:** fee controller is not implemented; ADR-0006 implementation and security gates must pass before acceptance.
 - [x] Reentrancy protection covers state-changing ETH/token flows.
 - [x] No privileged reserve drain or arbitrary user balance mutation exists.
 - [x] Compiler build and bytecode-size report pass.
@@ -52,14 +53,24 @@ Status as of 2026-10-16: P4 — Indexer and API reliability. PR #6 is merged to 
 - [x] PostgreSQL failure-injection test proves event and checkpoint writes roll back atomically when projection validation fails.
 - [x] Unit test verifies the worker continues after a transient cycle failure and exits cleanly on shutdown.
 - [x] PostgreSQL integration test verifies restart resumes from the first block after the last durable checkpoint.
-- [ ] Process-level worker test passes against isolated PostgreSQL and a simulated unavailable/recovering RPC, including graceful SIGTERM and restart resume (PR #7; CI pending).
+- [x] PR #7 process-level worker restart/RPC outage acceptance passed on the PR head: isolated PostgreSQL + simulated RPC outage, checkpoint persistence, graceful SIGTERM, restart resume. CI and security passed before merge; post-merge main checks remain pending verification.
 - [x] Add a read-only reconciliation CLI for database projection and on-chain factory/market consistency.
 - [ ] Run reconciliation against a deployed testnet factory and verify controlled drift detection.
+
+## Fee-configuration acceptance (proposed; not implemented)
+
+- [x] Audit current factory/market source: current markets use immutable 100 bps protocol + 100 bps creator fees; creation is non-payable; graduation/controller/DEX fee collection are absent. Existing markets cannot be retrofitted by adding a controller.
+- [x] Finalize fee policy in ADR-0006: creation 0.0006 ETH; graduation 0.0006 ETH only when graduation exists; curve buy/sell 130 bps total (100 bps treasury + 30 bps creator); global-live config; 500 bps max trading fee; 0.01 ETH max fixed fee; 24-hour delayed updates; explicit rounding.
+- [ ] Implement controller and controller-enabled factory/markets; policy is not yet active.
+- [ ] Verify creator claims and treasury withdrawals cannot spend reserves or other liabilities.
+- [ ] Uniswap v4 remains out of scope until target-chain contracts, hook permissions, custody, accounting, and end-to-end fee collection/withdrawal are verified.
+- [ ] Frontend reads effective on-chain values; runtime environment variables are not presented as authority.
+- [ ] Independent review and testnet evidence recorded. No deployment until deployment approval gates pass.
 
 ## D1 — Testnet deployment
 
 - [x] Deployment script rejects chain IDs other than 46630.
-- [x] Main-branch CI preflight checks the RPC chain ID and simulates deployment without broadcasting; CI passed on the latest main commit.
+- [x] CI workflow contains a testnet-only RPC chain-ID preflight and non-broadcast deployment simulation. [ ] Verify post-merge main run for `383dd1f7e2718b2b5977ec83a8fe809f1300045c`; PR workflows skip the testnet preflight and no deployment was performed.
 - [x] Manual deployment workflow requires explicit `broadcast=true` and uses the `robinhood-testnet` environment.
 - [ ] Configure environment required reviewers, protected deployer secret, RPC variable, and fee recipient.
 - [x] Main-branch RPC/deployment simulation CI job completed successfully.

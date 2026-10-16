@@ -16,7 +16,10 @@ Status values: PENDING, IN_PROGRESS, BLOCKED, COMPLETED, NOT_VERIFIED. A checked
 - [x] Implement fixed-supply ERC-20 with no post-deploy mint.
 - [x] Implement factory and token-to-market registry.
 - [x] Implement curve quote/buy/sell with min-output and deadline.
-- [x] Implement immutable bounded fees and pull-based fee withdrawal.
+- [x] Existing contract implementation uses immutable bounded fees and pull-based fee withdrawal (current code baseline).
+- [x] Audit current factory/market fee architecture and finalize fee policy in ADR-0006.
+- [ ] Implement controller-enabled factory/markets; current immutable markets cannot be retrofitted. Required policy: 0.0006 ETH creation, 0.0006 ETH graduation when graduation exists, 130 bps curve buy/sell split 100 bps treasury + 30 bps creator, global-live config, 24-hour delay, hard caps.
+- [ ] Keep Uniswap v4 fee collection out of scope until target-chain hook/accounting verification passes.
 - [x] Add reentrancy protection and event emissions.
 - [x] Confirm compiler build and bytecode sizes in CI.
 - [x] Add rejecting and reentrant fee-recipient tests.
@@ -59,8 +62,8 @@ Status values: PENDING, IN_PROGRESS, BLOCKED, COMPLETED, NOT_VERIFIED. A checked
 - [x] Add bounded RPC retry with exponential backoff and unit tests; RPC errors cannot be mistaken for a missing reorg ancestor.
 - [x] Extract and test the worker cycle supervisor; verify it resumes after a transient cycle failure and stops cleanly.
 - [x] Add PostgreSQL integration coverage proving a restarted indexer resumes at MAX(checkpoint) + 1.
-- [x] Add process-level worker test harness: simulated RPC outage, process startup recovery, durable checkpoint, SIGTERM shutdown, and restart resume. CI verification pending.
-- [x] Add a read-only reconciliation CLI comparing token projections with TokenCreated events, factory registry mappings, and market token getters.
+- [x] PR #7 process-level worker test acceptance passed on PR head: simulated RPC outage/recovery, durable checkpoint, graceful SIGTERM, and restart resume. CI `38837255615` and security `38837255569` passed; PR merged as `383dd1f7e2718b2b5977ec83a8fe809f1300045c`. Verify post-merge main CI/security runs `38837434400` and `38837434374` before release.
+- [x] Add a read-only reconciliation CLI comparing token projections with TokenCreated events, factory registry mappings, and market token getters (merged in PR #6).
 - [ ] Run reconciliation against a deployed testnet factory and verify controlled drift detection.
 
 ## P5 — Local integration
@@ -75,7 +78,7 @@ Status values: PENDING, IN_PROGRESS, BLOCKED, COMPLETED, NOT_VERIFIED. A checked
 - [x] Add deployment script that asserts chain ID 46630.
 - [x] Add manual deployment workflow with broadcast disabled by default and protected environment.
 - [x] Add main-branch testnet RPC and non-broadcast deployment preflight job.
-- [x] Verify main-branch testnet RPC/deployment simulation CI passed on `efa07a522e788c949cd0e67fb274d68db5eab085`.
+- [ ] Verify post-merge main CI/security for `383dd1f7e2718b2b5977ec83a8fe809f1300045c`. Testnet RPC/deployment simulation is intentionally skipped on PR workflows; no deployment or broadcast was performed.
 - [ ] Review deployment simulation gas output and record the reviewed result.
 - [ ] Deploy factory only after contract gates pass. **BLOCKED:** no deployer key or test ETH is available in the execution environment.
 - [ ] Record chain ID, addresses, tx hashes, block numbers, compiler/settings.

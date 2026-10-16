@@ -27,9 +27,10 @@ The MVP is non-custodial. The API is read-only; signing and transaction submissi
 - Buy and sell use integer-only arithmetic and explicit slippage bounds.
 - User transactions include a deadline; expired transactions revert.
 - Reentrancy protection covers state-changing external entry points that move ETH or tokens.
-- Protocol and creator fee rates are bounded at deployment and immutable thereafter. Combined fee must never exceed 500 basis points (5%); initial defaults are 100 bps protocol + 100 bps creator.
-- Fee recipients are non-zero and immutable in the MVP.
-- Fees are accounted as pull-based liabilities; trading must not depend on fee recipients accepting ETH during a trade.
+- **Current implementation baseline:** protocol/creator fee rates and recipients are immutable after deployment; combined trading fees are bounded to 500 bps. This describes existing code only.
+- **Finalized policy (not implemented):** configurable on-chain fees without redeploying each market: 0.0006 ETH creation, 0.0006 ETH graduation (inactive until graduation exists), and 130 bps bonding-curve buys/sells split into 100 bps treasury + 30 bps creator. Fee basis, rounding, global update behavior, hard bounds, and 24-hour update delay are defined in `docs/FEE_CONFIGURATION.md` and ADR-0006. These values must not be represented as active until implemented, reviewed, and tested.
+- Any future configurable controller must enforce hard-coded bounds, explicit authorization/delay policy, non-zero recipients, and pull-based liabilities. Trading must not depend on recipients accepting ETH during a trade.
+- Runtime environment variables are not on-chain authority. They may initialize deployment-time values only; changing them cannot mutate deployed contract state.
 - No owner-only reserve withdrawal, arbitrary token recovery, or privileged user balance mutation.
 - Events are emitted for token creation, buys, sells, and fee accounting.
 - All arithmetic, inventory, reserve, fee, and supply invariants are tested.
@@ -38,7 +39,7 @@ The MVP is non-custodial. The API is read-only; signing and transaction submissi
 
 Use a constant-product pricing model with explicitly documented virtual reserves. The market must hold enough real token inventory to satisfy every sale. Virtual reserves affect pricing only; they are not assets and must never be presented as withdrawable balances. Define buy/sell rounding conservatively and prove fees and rounding cannot create negative reserves or unbacked payouts.
 
-Graduation to an AMM is deferred until target-network router/factory addresses, ABI, bytecode, liquidity custody, and failure/recovery behaviour are independently verified.
+Graduation to an AMM is deferred until target-network router/factory addresses, ABI, bytecode, liquidity custody, and failure/recovery behaviour are independently verified. The graduation fee remains inactive until that flow exists. Uniswap v4 fee collection is out of scope and unverified; standard LP fees must not be described as MICOW creator/treasury revenue.
 
 ## 4. Web application
 

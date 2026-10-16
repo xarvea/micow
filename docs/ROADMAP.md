@@ -5,18 +5,23 @@ Project state as of 2026-10-16: **P4 — Indexer and API reliability**. Testnet-
 ## Current execution snapshot
 
 - **Merged:** foundation, contract baseline, RPC/API hardening, PostgreSQL idempotency/reorg integration, atomic indexer persistence, and worker restart/cycle recovery.
-- **Latest merged main:** `dea1590d4579d2a4ca762c6536e815375ce8fc70` (PR #6); PR CI and security passed, post-merge main verification pending.
-- **In progress:** PR #7 adds a process-level indexer recovery test covering simulated RPC outage, startup recovery, durable checkpointing, graceful shutdown, and restart resume.
+- **Current main snapshot:** `383dd1f7e2718b2b5977ec83a8fe809f1300045c` (PR #7 merged; PR #8 fee-configuration documentation was already merged in its parent history).
+- **Merged:** PR #6 read-only reconciliation CLI, PR #7 process-level outage/restart acceptance, and PR #8 fee-policy proposal documentation.
+- **PR #7 verification:** CI run `38837255615` and security run `38837255569` passed on the latest PR head before merge. Post-merge main CI/security runs `38837434400` and `38837434374` were queued at last check; verify their final results before release decisions.
 - **Blocked:** live reconciliation and testnet deployment require an actual deployed factory; deployment also requires a protected testnet-only deployer key, test ETH, a reviewed fee recipient, and protected environment reviewers.
-- **Not complete:** CI acceptance for the process-level test, real provider outage drill, local full-service E2E, backup/restore drill, independent contract/economic review.
+- **Not complete:** real-provider outage drill, local full-service E2E, backup/restore drill, independent contract/economic review.
 - **Safety boundary:** no mainnet configuration, deployment, or real-value transaction is authorized by this roadmap.
 
 ## Phase 0 — Foundation and specification
 Deliverables: product scope, architecture, threat model, ADRs, provenance, toolchain pins, monorepo layout, CI/security plan.
 Exit gate: scope and interfaces documented; secrets absent; reproducible toolchain recorded.
 
+## Fee architecture gate (cross-cutting)
+
+The source audit is complete and fee policy is recorded in ADR-0006. Current contracts use immutable 100 bps protocol + 100 bps creator fees; creation is non-payable, and graduation/controller/DEX fee collection are absent. The finalized future policy is 0.0006 ETH creation, 0.0006 ETH graduation when implemented, and 130 bps curve buy/sell (100 bps treasury + 30 bps creator), global-live config, 500 bps trading cap, 0.01 ETH fixed-fee cap, and 24-hour delayed updates. The controller is not implemented. Existing immutable markets cannot be retrofitted; deploy a compatible controller/factory/market bundle only after tests and independent review. Uniswap v4 fees remain out of scope pending verification.
+
 ## Phase 1 — Smart contracts
-Tasks: fixed-supply ERC-20; atomic factory; constant-product curve; conservative integer rounding; virtual/real reserve separation; slippage/deadline; immutable fee configuration and hard cap; pull-based fee withdrawal; reentrancy protection; event schema; deployment guard.
+Tasks: fixed-supply ERC-20; atomic factory; constant-product curve; conservative integer rounding; virtual/real reserve separation; slippage/deadline; bounded fee configuration and hard cap; current contracts use immutable fee settings, while the proposed mutable on-chain controller is not implemented; pull-based fee withdrawal; reentrancy protection; event schema; deployment guard.
 Exit gate: contracts compile without unexplained warnings; invariants and unit/fuzz tests pass; independent code-review findings resolved.
 
 ## Phase 2 — Contract test quality
