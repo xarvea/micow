@@ -5,7 +5,7 @@ Project state as of 2026-10-16: **P4 — Indexer and API reliability**. Testnet-
 ## Current execution snapshot
 
 - **Merged:** foundation, contract baseline, RPC/API hardening, PostgreSQL idempotency/reorg integration, atomic indexer persistence, and worker restart/cycle recovery.
-- **Current main snapshot:** `383dd1f7e2718b2b5977ec83a8fe809f1300045c` (PR #7 merged; PR #8 fee-configuration documentation was already merged in its parent history).
+- **Current main snapshot:** `61f4fe5a7041d403716768e867ab7674c463a94c` (PR #9 merged). Post-merge CI `38837722074` and security `38837722123` passed; this does not establish deployment readiness.
 - **Merged:** PR #6 read-only reconciliation CLI, PR #7 process-level outage/restart acceptance, and PR #8 fee-policy proposal documentation.
 - **PR #7 verification:** CI run `38837255615` and security run `38837255569` passed on the latest PR head before merge. Post-merge main CI/security runs `38837434400` and `38837434374` were queued at last check; verify their final results before release decisions.
 - **Blocked:** live reconciliation and testnet deployment require an actual deployed factory; deployment also requires a protected testnet-only deployer key, test ETH, a reviewed fee recipient, and protected environment reviewers.
