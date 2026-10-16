@@ -44,8 +44,8 @@
 
 **Decisions:**
 
-1. Creation fee: 0.0006 ETH, paid exactly to treasury. Underpayment and overpayment revert.
-2. Graduation fee: 0.0006 ETH to treasury, inactive until graduation is implemented and tested atomically.
+1. Creation fee: 0.0006 ETH, paid exactly to treasury accounting in `LaunchpadFactory` as a treasury-only pull liability; underpayment and overpayment revert. The factory does not synchronously call the treasury during token creation, so a rejecting treasury cannot block creation. Withdrawal is guarded and only the configured treasury may claim.
+2. Graduation fee: 0.0006 ETH to treasury accounting as a pull liability in the graduation execution contract, inactive until graduation is implemented and tested atomically. No direct treasury call in the critical graduation path.
 3. Bonding-curve buy/sell fee: 130 bps total, split 100 bps treasury + 30 bps creator.
 4. Fee basis: buys use gross ETH input; sells use gross curve proceeds before fee deduction.
 5. Rounding: total fee is floored once at 130 bps; treasury share is floored at 100 bps; creator receives the remainder so allocations equal the charged total.
