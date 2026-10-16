@@ -8,6 +8,38 @@ LOCAL_RPC="${LOCAL_RPC_URL:-http://127.0.0.1:8545}"
 DATABASE_URL="${DATABASE_URL:-postgresql://micow:micow@127.0.0.1:5432/micow}"
 API_URL="${API_URL:-http://127.0.0.1:4000}"
 WEB_URL="${WEB_URL:-http://127.0.0.1:3000}"
+
+# This E2E is local-only: fail closed before starting processes or broadcasting.
+LOCAL_RPC="$LOCAL_RPC" DATABASE_URL="$DATABASE_URL" API_URL="$API_URL" WEB_URL="$WEB_URL" node --input-type=module <<'NODE'
+import { URL } from "node:url";
+
+const loopback = new Set(["127.0.0.1", "localhost", "::1"]);
+function localHttp(name, raw, expectedPort) {
+  let url;
+  try { url = new URL(raw); } catch { throw new Error(name + " must be a valid URL"); }
+  if (url.protocol !== "http:" || !loopback.has(url.hostname) ||
+      url.port !== String(expectedPort) || url.username || url.password) {
+    throw new Error(name + " must use HTTP loopback on port " + expectedPort);
+  }
+}
+let db;
+try { db = new URL(process.env.DATABASE_URL); } catch {
+  throw new Error("DATABASE_URL must be a valid PostgreSQL URL");
+}
+if (!["postgres:", "postgresql:"].includes(db.protocol) ||
+    !loopback.has(db.hostname) || (db.port && db.port !== "5432")) {
+  throw new Error("DATABASE_URL must point to a local PostgreSQL instance on port 5432");
+}
+localHttp("LOCAL_RPC_URL", process.env.LOCAL_RPC, 8545);
+localHttp("API_URL", process.env.API_URL, 4000);
+localHttp("WEB_URL", process.env.WEB_URL, 3000);
+NODE
+
+if [[ "${MICOW_E2E_GUARD_ONLY:-0}" == "1" ]]; then
+  echo "PASS: local E2E endpoint guard"
+  exit 0
+fi
+
 ANVIL_KEY=""
 LOCAL_ADDRESS="0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266"
 LOG_DIR="${TMPDIR:-/tmp}/micow-p5-e2e"
@@ -15,14 +47,15 @@ mkdir -p "$LOG_DIR"
 
 ANVIL_PID=""
 API_PID=""
+API_PROBE_PID=""
 INDEXER_PID=""
 WEB_PID=""
 
 cleanup() {
-  for pid in "$WEB_PID" "$INDEXER_PID" "$API_PID" "$ANVIL_PID"; do
+  for pid in "$WEB_PID" "$INDEXER_PID" "$API_PID" "$API_PROBE_PID" "$ANVIL_PID"; do
     if [[ -n "$pid" ]]; then kill "$pid" 2>/dev/null || true; fi
   done
-  for pid in "$WEB_PID" "$INDEXER_PID" "$API_PID" "$ANVIL_PID"; do
+  for pid in "$WEB_PID" "$INDEXER_PID" "$API_PID" "$API_PROBE_PID" "$ANVIL_PID"; do
     if [[ -n "$pid" ]]; then wait "$pid" 2>/dev/null || true; fi
   done
 }
@@ -52,6 +85,23 @@ start_indexer() {
   (cd apps/indexer && ./node_modules/.bin/tsx src/main.ts) >"$log_file" 2>&1 &
   INDEXER_PID=$!
   wait_for "indexer startup ${INDEXER_RUN}" "grep -q 'MICOW indexer started on chain 46630' '$log_file'"
+}
+
+wait_http_status() {
+  local name="$1"
+  local url="$2"
+  local expected="$3"
+  for _ in $(seq 1 30); do
+    local status
+    status="$(curl -sS -o /dev/null -w '%{http_code}' "$url" 2>/dev/null || true)"
+    if [[ "$status" == "$expected" ]]; then
+      printf 'verified: %s returns HTTP %s\n' "$name" "$expected"
+      return 0
+    fi
+    sleep 1
+  done
+  printf 'ERROR: %s did not return HTTP %s\n' "$name" "$expected" >&2
+  return 1
 }
 
 stop_process() {
@@ -129,6 +179,17 @@ fi
 # Reapplying migrations verifies startup is safe after an interrupted/retried bootstrap.
 pnpm --filter @micow/api db:migrate >"$LOG_DIR/migrate-repeat.log" 2>&1
 
+# Exercise API startup while PostgreSQL is unavailable, then restart with the valid database.
+(
+  cd apps/api
+  DATABASE_URL="postgresql://micow:micow@127.0.0.1:65432/micow" API_PORT=4001 API_HOST=127.0.0.1 ./node_modules/.bin/tsx src/server.ts
+) >"$LOG_DIR/api-unavailable.log" 2>&1 &
+API_PROBE_PID=$!
+wait_for "API health with unavailable database" "curl -fsS 'http://127.0.0.1:4001/health'"
+wait_http_status "API readiness with unavailable database" "http://127.0.0.1:4001/ready" "503"
+stop_process "API with unavailable database" "$API_PROBE_PID" "$LOG_DIR/api-unavailable.log"
+API_PROBE_PID=""
+
 (cd apps/api && ./node_modules/.bin/tsx src/server.ts) >"$LOG_DIR/api.log" 2>&1 &
 API_PID=$!
 start_indexer
@@ -138,6 +199,7 @@ export NEXT_PUBLIC_ROBINHOOD_RPC_URL="$LOCAL_RPC"
 WEB_PID=$!
 
 wait_for "API health" "curl -fsS '$API_URL/health'"
+wait_http_status "API readiness after database recovery" "$API_URL/ready" "200"
 wait_for "web server" "curl -fsS '$WEB_URL' | grep -q 'Launch ideas'"
 
 CREATE_RECEIPT="$(cast send "$FACTORY_ADDRESS" 'createToken(string,string,string)' 'P5 E2E Token' 'P5E2E' 'ipfs://p5-e2e' --value 0.0006ether --private-key "$ANVIL_KEY" --rpc-url "$LOCAL_RPC" --json)"
