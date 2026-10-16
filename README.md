@@ -4,11 +4,11 @@ MICOW is an independently implemented, testnet-only EVM token launchpad targetin
 
 ## Current delivery status
 
-Documentation snapshot: 2026-10-16. Current main head: `61f4fe5a7041d403716768e867ab7674c463a94c` (PR #9 merged). Post-merge CI `38837722074` and security `38837722123` passed. Deployment simulation is intentionally skipped on PR workflows; no deployment or broadcast was performed.
+Documentation snapshot: 2026-10-16. Current main head: `7baf9838164f9817ca3c880a1096aa3f6d056435` (PR #11 merged). Main CI `38875916343` and security `38875916097` passed. Testnet RPC chain ID 46630 and non-broadcast deployment simulation passed; no deployment transaction or broadcast was performed.
 
 - [x] Clean-room Git history established.
 - [x] Product scope, architecture, threat model, roadmap, build/deployment runbooks, operations, and acceptance gates documented.
-- [x] Fixed-supply ERC-20, factory, and bonding-curve implementation with fee liabilities and safety checks added.
+- [x] Fixed-supply ERC-20 and bonding-curve implementation; PR #11 adds exact 0.0006 ETH creation fee with treasury-only pull accounting and guarded withdrawal. Trading remains 100 bps protocol + 100 bps creator; configurable controller, 130 bps trading policy, graduation fee, and DEX fee collection remain unimplemented.
 - [x] Next.js launchpad UI with injected wallet connection, chain guard, token creation, buy/sell quotes, and slippage-protected transactions added.
 - [x] Read-only Fastify API and PostgreSQL-backed reorg-aware indexer implementation added.
 - [x] CI contract build, unit/fuzz tests, and invariant profile pass.
