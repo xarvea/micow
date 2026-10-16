@@ -1,6 +1,6 @@
 # MICOW Master TODO
 
-Status snapshot 2026-10-16: current `main` is `f3a398781b30bf35d633e4de4d2bdf39672cd166`. CI `38916331756` and security `38916331618` passed on this exact SHA. Testnet chain-ID preflight and non-broadcast deployment simulation do not authorize or perform deployment. No deployment transaction was broadcast.
+Status snapshot 2026-10-16: PR #26 merged to `main` as `d9a12a94bd146036a7e1d7b579e6eb54536fd93e`. Post-merge CI `38930901087` and security `38930901199` are associated with that SHA; check final conclusions before release sign-off. No deployment transaction was broadcast.
 
 Status values: PENDING, IN_PROGRESS, BLOCKED, COMPLETED, NOT_VERIFIED. A checked implementation task is not a claim that its acceptance tests passed.
 
@@ -27,7 +27,8 @@ Status values: PENDING, IN_PROGRESS, BLOCKED, COMPLETED, NOT_VERIFIED. A checked
 - [x] Add rejecting and reentrant fee-recipient tests.
 - [x] Add forced-ETH treasury-accounting regression test (PR #14 merged; forced ETH remains surplus and is not a treasury liability).
 - [x] Add quote/execution equivalence and rounding-boundary tests.
-- [ ] Review curve economics, inventory limits, and MEV exposure.
+- [x] Complete preliminary source-based review of curve economics, inventory limits, fee rounding, reserve solvency, and MEV exposure (PR #22); this is not an independent audit.
+- [ ] Owner must explicitly accept the documented residual public-mempool sandwich risk or approve mitigation before issue #16 can close.
 
 ## P2 — Contract testing
 - [x] Add factory and market unit tests.
@@ -35,7 +36,7 @@ Status values: PENDING, IN_PROGRESS, BLOCKED, COMPLETED, NOT_VERIFIED. A checked
 - [x] Add supply, inventory, ETH reserve, and fee-liability invariants.
 - [x] Run standard Foundry suite successfully.
 - [x] Run high-intensity CI fuzz/invariant profile successfully.
-- [ ] Add gas snapshots and inspect deployment bytecode size.
+- [x] Add reproducible gas snapshots and record mined local Anvil receipt baselines (PR #19/#25); review deployment bytecode-size report before deployment.
 
 ## P3 — Web
 - [x] Build Next.js App Router application.
@@ -73,9 +74,9 @@ Status values: PENDING, IN_PROGRESS, BLOCKED, COMPLETED, NOT_VERIFIED. A checked
 - [x] Add Docker Compose for PostgreSQL.
 - [x] Add environment template and validation for required indexer settings.
 - [x] Add migration-backed API/indexer PostgreSQL integration tests.
-- [ ] Add a full service-level end-to-end smoke test.
+- [x] Add full local service-level E2E for API health/readiness, migration reapply, Anvil create/buy/sell, API/indexer projections, checkpoint resume, and idempotent replay (PR #21/#23/#26).
 - [x] Verify clean-checkout install, build, and automated tests in CI.
-- [ ] Verify local service startup/stop and migration recovery on Ubuntu.
+- [x] Verify local service startup/stop, migration reapply, API readiness with unavailable/recovered PostgreSQL, and clean shutdown in CI (PR #23/#26). Ubuntu host-specific manual run remains NOT_VERIFIED.
 
 ## P6 — Testnet
 - [x] Add deployment script that asserts chain ID 46630.
@@ -104,7 +105,7 @@ Status values: PENDING, IN_PROGRESS, BLOCKED, COMPLETED, NOT_VERIFIED. A checked
 - [x] Exercise database reorg rollback/replay in PostgreSQL CI.
 - [x] Test bounded RPC retry and backoff with unit tests.
 - [ ] Run RPC outage recovery drill against an unavailable/recovering provider.
-- [ ] Review threat model and unresolved findings.
+- [ ] Review threat model and unresolved findings; obtain explicit owner decision on residual sandwich/MEV risk.
 - [ ] Complete launch readiness checklist.
 
 ## P9 — Mainnet (explicitly out of scope)
