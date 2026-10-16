@@ -1,6 +1,6 @@
 # MICOW Master TODO
 
-Status snapshot 2026-10-16: current `main` is `61f4fe5a7041d403716768e867ab7674c463a94c`; post-merge CI `38837722074` and security `38837722123` passed. This does not mean deployment simulation or deployment completed; no transaction was broadcast.
+Status snapshot 2026-10-16: current `main` is `7baf9838164f9817ca3c880a1096aa3f6d056435` (PR #11 merged). Main CI `38875916343` and security `38875916097` passed, including chain-ID 46630 verification and non-broadcast deployment simulation. No deployment transaction was broadcast.
 
 Status values: PENDING, IN_PROGRESS, BLOCKED, COMPLETED, NOT_VERIFIED. A checked implementation task is not a claim that its acceptance tests passed.
 
@@ -18,7 +18,7 @@ Status values: PENDING, IN_PROGRESS, BLOCKED, COMPLETED, NOT_VERIFIED. A checked
 - [x] Implement fixed-supply ERC-20 with no post-deploy mint.
 - [x] Implement factory and token-to-market registry.
 - [x] Implement curve quote/buy/sell with min-output and deadline.
-- [x] Existing contract implementation uses immutable bounded fees and pull-based fee withdrawal (current code baseline).
+- [x] Bonding-curve markets retain immutable 100 bps protocol + 100 bps creator fees; factory creation fee is exactly 0.0006 ETH with treasury-only pull liability and guarded withdrawal (PR #11).
 - [x] Audit current factory/market fee architecture and finalize fee policy in ADR-0006.
 - [ ] Implement controller-enabled factory/markets; current immutable markets cannot be retrofitted. Required policy: 0.0006 ETH creation, 0.0006 ETH graduation when graduation exists, 130 bps curve buy/sell split 100 bps treasury + 30 bps creator, global-live config, 24-hour delay, hard caps.
 - [ ] Keep Uniswap v4 fee collection out of scope until target-chain hook/accounting verification passes.
@@ -80,7 +80,7 @@ Status values: PENDING, IN_PROGRESS, BLOCKED, COMPLETED, NOT_VERIFIED. A checked
 - [x] Add deployment script that asserts chain ID 46630.
 - [x] Add manual deployment workflow with broadcast disabled by default and protected environment.
 - [x] Add main-branch testnet RPC and non-broadcast deployment preflight job.
-- [x] Verify post-merge main CI/security for `61f4fe5a7041d403716768e867ab7674c463a94c`: CI `38837722074` and security `38837722123` passed. Testnet RPC/deployment simulation is intentionally skipped on PR workflows; no deployment or broadcast was performed.
+- [x] Verify post-merge main CI/security for `7baf9838164f9817ca3c880a1096aa3f6d056435`: CI `38875916343` and security `38875916097` passed. RPC chain-ID 46630 and non-broadcast deployment simulation passed; no deployment or broadcast was performed.
 - [ ] Review deployment simulation gas output and record the reviewed result.
 - [ ] Deploy factory only after contract gates pass. **BLOCKED:** no deployer key or test ETH is available in the execution environment.
 - [ ] Record chain ID, addresses, tx hashes, block numbers, compiler/settings.
