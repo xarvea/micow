@@ -17,11 +17,7 @@ contract RejectingMarketFeeRecipient {
         revert("REJECT_ETH");
     }
 
-    function createMarketAndBuy(LaunchpadFactory factory)
-        external
-        payable
-        returns (BondingCurveMarket market)
-    {
+    function createMarketAndBuy(LaunchpadFactory factory) external payable returns (BondingCurveMarket market) {
         (, address marketAddress) = factory.createToken{value: factory.CREATION_FEE()}(
             "Rejecting Economic Test", "RET", "ipfs://rejecting-economic-test"
         );
