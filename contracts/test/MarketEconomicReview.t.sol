@@ -46,11 +46,13 @@ contract MarketEconomicReviewTest is Test {
         factory = new LaunchpadFactory(protocolFeeRecipient);
         vm.deal(creator, 1 ether);
 
+        uint256 creationFee = factory.CREATION_FEE();
         vm.prank(creator);
         (address tokenAddress, address marketAddress) =
-            factory.createToken{value: factory.CREATION_FEE()}("Economic Review", "ECON", "ipfs://economic-review");
+            factory.createToken{value: creationFee}("Economic Review", "ECON", "ipfs://economic-review");
         token = LaunchToken(tokenAddress);
         market = BondingCurveMarket(payable(marketAddress));
+        assertEq(market.creator(), creator, "creator prank was consumed before createToken");
     }
 
     function testFuzz_BuyAndSellQuotesMatchExecutionAndAccounting(uint96 rawBuyAmount, uint96 rawSellAmount) public {
