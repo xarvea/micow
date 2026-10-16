@@ -67,6 +67,13 @@ Status as of 2026-10-16: P5 local integration and release-gate hardening. PR #26
 - [x] Reapply migrations, create/buy/sell locally, verify API/indexer projections, restart/resume checkpoint without duplicate trades, and cleanly stop services.
 - [ ] Manual run on a user-managed Ubuntu host remains NOT_VERIFIED; CI E2E is the current evidence.
 
+## P8 — Backup and restore recovery drill
+
+- [ ] CI seeds deterministic PostgreSQL fixture rows, creates a separate empty restore database, and verifies custom-format backup/restore preserves indexed block/event/token/trade counts and maximum indexed block.
+- [ ] CI verifies the restore script rejects a non-empty target without overwriting its contents.
+- [ ] For a real operational restore, verify token/trade counts and maximum indexed block, then run read-only reconciliation against a deployed factory; this remains blocked until a testnet factory exists.
+- [ ] Durable backup retention, access control, and an operator-run restore against a protected testnet-like environment remain separate operational acceptance items.
+
 ## Fee-configuration acceptance (proposed; not implemented)
 
 - [x] Audit current factory/market source: current markets use immutable 100 bps protocol + 100 bps creator fees; PR #11 implements exact 0.0006 ETH creation fee and treasury pull accounting. Graduation/controller/DEX fee collection remain absent. Existing markets cannot be retrofitted by adding a controller.
