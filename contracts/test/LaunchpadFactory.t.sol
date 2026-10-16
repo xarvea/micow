@@ -53,7 +53,7 @@ contract LaunchpadFactoryTest is Test {
 
     function testCreationFeeAccruesAndTreasuryCanWithdraw() public {
         vm.prank(creator);
-        factory.createToken{value: factory.CREATION_FEE()}("Micow Test", "MCWT", "ipfs://example-metadata");
+        factory.createToken{value: 0.0006 ether}("Micow Test", "MCWT", "ipfs://example-metadata");
 
         assertEq(factory.claimableTreasuryFees(protocolFeeRecipient), factory.CREATION_FEE());
         assertEq(factory.totalClaimableTreasuryFees(), factory.CREATION_FEE());
@@ -70,7 +70,7 @@ contract LaunchpadFactoryTest is Test {
 
     function testOnlyTreasuryCanWithdraw() public {
         vm.prank(creator);
-        factory.createToken{value: factory.CREATION_FEE()}("Micow Test", "MCWT", "ipfs://example-metadata");
+        factory.createToken{value: 0.0006 ether}("Micow Test", "MCWT", "ipfs://example-metadata");
         vm.prank(creator);
         vm.expectRevert(LaunchpadFactory.UnauthorizedTreasury.selector);
         factory.withdrawTreasuryFees();
@@ -79,7 +79,7 @@ contract LaunchpadFactoryTest is Test {
     function testCreationFailureDoesNotAccrueFee() public {
         vm.expectRevert(LaunchpadFactory.EmptyNameOrSymbol.selector);
         vm.prank(creator);
-        factory.createToken{value: factory.CREATION_FEE()}("", "MCWT", "ipfs://example-metadata");
+        factory.createToken{value: 0.0006 ether}("", "MCWT", "ipfs://example-metadata");
         assertEq(factory.totalClaimableTreasuryFees(), 0);
         assertEq(address(factory).balance, 0);
     }
@@ -92,12 +92,12 @@ contract LaunchpadFactoryTest is Test {
     function testRejectEmptyName() public {
         vm.expectRevert(LaunchpadFactory.EmptyNameOrSymbol.selector);
         vm.prank(creator);
-        factory.createToken{value: factory.CREATION_FEE()}("", "MCWT", "");
+        factory.createToken{value: 0.0006 ether}("", "MCWT", "");
     }
 
     function testRejectEmptySymbol() public {
         vm.expectRevert(LaunchpadFactory.EmptyNameOrSymbol.selector);
         vm.prank(creator);
-        factory.createToken{value: factory.CREATION_FEE()}("Micow Test", "", "");
+        factory.createToken{value: 0.0006 ether}("Micow Test", "", "");
     }
 }
