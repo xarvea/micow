@@ -40,7 +40,7 @@
 
 **Status:** Fee policy decided for implementation; controller not implemented. This ADR records product/economic policy, not deployment authorization.
 
-**Context:** Source audit of `LaunchpadFactory.sol` and `BondingCurveMarket.sol` found immutable 100 bps protocol + 100 bps creator rates, a 500 bps cap, immutable treasury recipient, and pull-based liabilities. Factory creation is non-payable; graduation and DEX fee collection are absent. The contracts are non-upgradeable, so an added controller cannot retrofit already deployed markets.
+**Context:** Source audit of `LaunchpadFactory.sol` and `BondingCurveMarket.sol` found immutable 100 bps protocol + 100 bps creator market rates, a 500 bps cap, immutable treasury recipient, and pull-based liabilities. PR #11 implements an exact 0.0006 ETH factory creation fee with treasury-only pull accounting and guarded withdrawal. Graduation and DEX fee collection are absent. The contracts are non-upgradeable, so an added controller cannot retrofit already deployed markets.
 
 **Decisions:**
 
