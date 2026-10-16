@@ -26,9 +26,8 @@ contract GasSnapshotTest is Test {
         vm.deal(creator, 10 ether);
 
         vm.prank(creator);
-        (address tokenAddress, address marketAddress) = factory.createToken{value: factory.CREATION_FEE()}(
-            "Gas Snapshot", "GAS", "ipfs://gas-snapshot"
-        );
+        (address tokenAddress, address marketAddress) =
+            factory.createToken{value: factory.CREATION_FEE()}("Gas Snapshot", "GAS", "ipfs://gas-snapshot");
         token = LaunchToken(tokenAddress);
         market = BondingCurveMarket(payable(marketAddress));
         vm.deal(trader, 10 ether);
