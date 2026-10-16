@@ -1,6 +1,6 @@
 # Acceptance Criteria and Phase Gates
 
-Status as of 2026-10-16: P4 — Indexer and API reliability. Current main snapshot is `8b7ab0689e4534f63ccd5dd9fce61799cf89c0cc` (PR #11 merged). Main CI `38875916343` and security `38875916097` passed on `7baf9838164f9817ca3c880a1096aa3f6d056435`; PR #14 forced-ETH accounting regression test also passed CI/security on its PR head, including contract checks, PostgreSQL integration, application checks, CodeQL, chain-ID 46630 verification, and non-broadcast deployment simulation. Live reconciliation and deployment remain blocked pending approved testnet-only credentials, test ETH, reviewed treasury, and protected-environment reviewer verification.
+Status as of 2026-10-16: P4 — Indexer and API reliability. Current main snapshot is `8b7ab0689e4534f63ccd5dd9fce61799cf89c0cc` (PR #11 merged). Main CI `38875916343` and security `38875916097` passed on contract baseline `7baf9838164f9817ca3c880a1096aa3f6d056435`, including chain-ID 46630 verification and non-broadcast deployment simulation. PR #14's forced-ETH regression test separately passed CI/security on its PR head; its testnet simulation job was skipped. Live reconciliation and deployment remain blocked pending approved testnet-only credentials, test ETH, reviewed treasury, and protected-environment reviewer verification.
 
 ## F0 — Foundation and specification
 
