@@ -4,6 +4,7 @@ import { setTimeout as delay } from "node:timers/promises";
 import { Pool } from "pg";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { readFile } from "node:fs/promises";
+import { resolve } from "node:path";
 
 const databaseUrl = process.env.TEST_DATABASE_URL;
 const integrationDescribe = describe.skipIf(!databaseUrl);
@@ -133,7 +134,7 @@ integrationDescribe("indexer process recovery", () => {
 
   function startIndexer(): { child: ChildProcess; output: () => string } {
     let logs = "";
-    const child = spawn("pnpm", ["exec", "tsx", "src/main.ts"], {
+    const child = spawn(process.execPath, [resolve(process.cwd(), "../../node_modules/tsx/dist/cli.mjs"), "src/main.ts"], {
       cwd: process.cwd(),
       env: {
         ...process.env,
@@ -165,7 +166,8 @@ integrationDescribe("indexer process recovery", () => {
       child.kill("SIGKILL");
       throw new Error("Indexer did not stop after SIGTERM. Output:\n" + output());
     }
-    expect(child.exitCode).toBe(0);
+    expect(child.signalCode, "indexer must handle SIGTERM and exit normally. Output:\n" + output()).toBeNull();
+    expect(child.exitCode, "indexer must exit with status 0. Output:\n" + output()).toBe(0);
   }
 
   it("recovers from an RPC outage, commits a durable checkpoint, and resumes after a real process restart", async () => {
