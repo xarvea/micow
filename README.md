@@ -4,7 +4,7 @@ MICOW is an independently implemented, testnet-only EVM token launchpad targetin
 
 ## Current delivery status
 
-Documentation snapshot: 2026-10-16. Current main head: `f3a398781b30bf35d633e4de4d2bdf39672cd166`. CI `38916331756` and security `38916331618` passed on this exact SHA. Testnet RPC chain ID 46630 and non-broadcast deployment simulation passed; no deployment transaction or broadcast was performed.
+Documentation snapshot: 2026-10-16. PR #26 merged as `d9a12a94bd146036a7e1d7b579e6eb54536fd93e`. Post-merge CI `38930901087` and security `38930901199` are the verification runs for that exact SHA; check their linked results for final conclusions. No deployment transaction or public-chain broadcast was performed.
 
 - [x] Clean-room Git history established.
 - [x] Product scope, architecture, threat model, roadmap, build/deployment runbooks, operations, and acceptance gates documented.
@@ -12,8 +12,8 @@ Documentation snapshot: 2026-10-16. Current main head: `f3a398781b30bf35d633e4de
 - [x] Next.js launchpad UI with injected wallet connection, chain guard, token creation, buy/sell quotes, and slippage-protected transactions added.
 - [x] Read-only Fastify API and PostgreSQL-backed reorg-aware indexer implementation added.
 - [x] CI contract build, unit/fuzz tests, and invariant profile pass.
-- [ ] Independent contract security/economic review completed.
-- [ ] Verify the Next.js build has no optional wallet SDK resolution warnings after connector externals hardening.
+- [ ] Independent contract security/economic review completed. The preliminary source-based economic/MEV review and regression coverage are merged; this is not an independent audit, and public-mempool sandwich risk still requires explicit owner acceptance or mitigation.
+- [x] Verify the Next.js production build in CI; optional wallet SDK externals were hardened.
 - [x] pnpm lockfile generated and committed; CI uses frozen installs.
 - [x] PostgreSQL integration tests pass in CI: duplicate event replay, reorg rollback/replay, and API readiness/token/trade queries.
 - [x] Playwright browser smoke tests pass in CI.
@@ -23,12 +23,13 @@ Documentation snapshot: 2026-10-16. Current main head: `f3a398781b30bf35d633e4de
 - [x] Verify current main CI/security: CI `38916331756` and security `38916331618` passed on exact SHA `f3a398781b30bf35d633e4de4d2bdf39672cd166`.
 - [x] PR #14 merged: forced-ETH accounting regression test passed CI/security on its PR head; this is test-only coverage, not a surplus-recovery mechanism.
 - [ ] Run reconciliation against an actual deployed testnet factory. **BLOCKED** until deployment prerequisites are satisfied.
+- [x] PR #18 economic regression coverage, PR #19 gas instrumentation, PR #22 preliminary economic/MEV review, PR #23 local service E2E restart/resume coverage, PR #25 receipt-based gas baseline, and PR #26 endpoint safety/API database-outage recovery merged. CI/security passed on their PR heads.
 
 Never treat this repository as audited or production-ready. Mainnet deployment is out of scope until independent security review and explicit approval.
 
 ## Current phase
 
-**P4 — Indexer and API reliability.** Durable checkpoint resume, worker-cycle retry/shutdown, atomic event/projection/checkpoint persistence, reorg rollback/replay, read-only reconciliation CLI, and process-level simulated RPC outage/restart acceptance are merged. PR #7 recovery work is merged; the latest verified main CI/security checks passed on exact main SHA `f3a398781b30bf35d633e4de4d2bdf39672cd166`. Live reconciliation remains blocked until a testnet factory is deployed. P5 local service E2E, P6 testnet deployment, and P8 recovery drills remain incomplete.
+**P5 — Local integration and release-gate hardening.** Full local service E2E now covers API health/readiness during PostgreSQL outage, migration reapply, local Anvil create/buy/sell, indexer checkpoint resume/idempotent replay, and clean shutdown. PR #26 adds fail-closed endpoint validation to prevent this E2E from targeting nonlocal RPC/database/API/web endpoints. P4 live reconciliation remains blocked until a testnet factory is deployed. Backup/restore, external-provider outage drill, independent audit, owner MEV-risk decision, and testnet deployment remain incomplete.
 
 ## Stack
 

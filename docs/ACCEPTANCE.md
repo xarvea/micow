@@ -1,6 +1,6 @@
 # Acceptance Criteria and Phase Gates
 
-Status as of 2026-10-16: P4 — Indexer and API reliability. Current main snapshot is `f3a398781b30bf35d633e4de4d2bdf39672cd166` (documentation reconciliation commit). Main CI `38916331756` and security `38916331618` both passed on this exact SHA, including the repository's contract and application checks; no deployment transaction or broadcast was performed. PR #14's forced-ETH regression test separately passed CI/security on its PR head; its testnet simulation job was skipped. Live reconciliation and deployment remain blocked pending approved testnet-only credentials, test ETH, reviewed treasury, and protected-environment reviewer verification.
+Status as of 2026-10-16: P5 local integration and release-gate hardening. PR #26 merged as `d9a12a94bd146036a7e1d7b579e6eb54536fd93e`; post-merge CI `38930901087` and security `38930901199` are the checks for that SHA, and final conclusions must be verified before release sign-off. No deployment transaction or public-chain broadcast was performed. Live reconciliation/deployment remain blocked pending approved testnet-only credentials, test ETH, reviewed treasury recipient, and protected-environment reviewer verification.
 
 ## F0 — Foundation and specification
 
@@ -22,7 +22,8 @@ Status as of 2026-10-16: P4 — Indexer and API reliability. Current main snapsh
 - [x] No privileged reserve drain or arbitrary user balance mutation exists.
 - [x] Compiler build and bytecode-size report pass.
 - [x] Add forced-ETH accounting regression test (PR #14 merged and documented); forced ETH remains surplus, not a recoverable liability.
-- [ ] Complete independent contract/economic review and record reproducible findings.
+- [x] Complete preliminary source-based economic/MEV review and record findings in `docs/ECONOMIC-MEV-REVIEW.md` (PR #22); this is not an independent audit.
+- [ ] Obtain explicit owner acceptance of residual public-mempool sandwich risk or implement an approved mitigation before closing issue #16.
 
 ## T1 — Contract tests
 
@@ -58,6 +59,14 @@ Status as of 2026-10-16: P4 — Indexer and API reliability. Current main snapsh
 - [x] Add a read-only reconciliation CLI for database projection and on-chain factory/market consistency.
 - [ ] Run reconciliation against a deployed testnet factory and verify controlled drift detection.
 
+## P5 — Local full-service E2E
+
+- [x] E2E fails closed unless RPC/API/web endpoints are HTTP loopback on expected ports and PostgreSQL is local on port 5432 (PR #26).
+- [x] Negative CI cases reject public testnet RPC, remote database host, and remote API/web URLs before any deployment command.
+- [x] API `/health` remains available while PostgreSQL is unavailable and `/ready` returns HTTP 503; readiness returns HTTP 200 with a healthy database.
+- [x] Reapply migrations, create/buy/sell locally, verify API/indexer projections, restart/resume checkpoint without duplicate trades, and cleanly stop services.
+- [ ] Manual run on a user-managed Ubuntu host remains NOT_VERIFIED; CI E2E is the current evidence.
+
 ## Fee-configuration acceptance (proposed; not implemented)
 
 - [x] Audit current factory/market source: current markets use immutable 100 bps protocol + 100 bps creator fees; PR #11 implements exact 0.0006 ETH creation fee and treasury pull accounting. Graduation/controller/DEX fee collection remain absent. Existing markets cannot be retrofitted by adding a controller.
@@ -88,5 +97,6 @@ Status as of 2026-10-16: P4 — Indexer and API reliability. Current main snapsh
 - [x] PostgreSQL idempotency/reorg/API integration job passes on the merged baseline.
 - [x] Dependency audit, CodeQL, Gitleaks, and pinned Actions pass on the merged baseline.
 - [x] Verify all gates on the reliability-hardening branch and atomicity phase.
-- [ ] Independent contract/economic review and remediation of any findings.
+- [ ] Independent contract/economic review and remediation of any findings; preliminary source review is not an independent audit.
+- [ ] Explicit owner decision on residual sandwich/MEV risk.
 
