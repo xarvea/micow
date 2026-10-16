@@ -22,6 +22,10 @@ contract RejectingFeeRecipient {
             0, block.timestamp
         );
     }
+
+    function withdrawFactoryFees(LaunchpadFactory factory) external {
+        factory.withdrawTreasuryFees();
+    }
 }
 
 contract ReentrantFeeRecipient {
