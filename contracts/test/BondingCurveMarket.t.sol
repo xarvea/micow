@@ -16,8 +16,11 @@ contract RejectingFeeRecipient {
         payable
         returns (address tokenAddress, address marketAddress, uint256 tokensOut)
     {
-        (tokenAddress, marketAddress) = factory.createToken{value: factory.CREATION_FEE()}("Rejecting Creator", "REJ", "ipfs://rejecting");
-        tokensOut = BondingCurveMarket(payable(marketAddress)).buy{value: msg.value - factory.CREATION_FEE()}(0, block.timestamp);
+        (tokenAddress, marketAddress) =
+            factory.createToken{value: factory.CREATION_FEE()}("Rejecting Creator", "REJ", "ipfs://rejecting");
+        tokensOut = BondingCurveMarket(payable(marketAddress)).buy{value: msg.value - factory.CREATION_FEE()}(
+            0, block.timestamp
+        );
     }
 }
 
