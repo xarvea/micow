@@ -1,16 +1,17 @@
 # MICOW Delivery Roadmap
 
-Project state as of 2026-10-16: **P5 — Local integration and release-gate hardening**. Testnet-only. A phase is complete only when evidence is recorded against its acceptance gate. The project is not audited and is not authorized for mainnet.
+Project state as of 2026-10-16: **P8 — Testnet launch-readiness hardening**. Testnet-only. A phase is complete only when evidence is recorded against its acceptance gate. The project is not audited and is not authorized for mainnet.
 
 ## Current execution snapshot
 
 - **Merged:** foundation, contract baseline, RPC/API hardening, PostgreSQL idempotency/reorg integration, atomic indexer persistence, and worker restart/cycle recovery.
-- **Current main snapshot after PR #26:** `d9a12a94bd146036a7e1d7b579e6eb54536fd93e`. Post-merge CI `38930901087` and security `38930901199` are the verification runs for this SHA; check final conclusions before declaring the baseline verified.
+- **Current main snapshot after PR #28:** `02c314518e64318e6a88a4c76f52daf1fcfa2a5b`. Main CI `38940734418` and security `38940734236` passed on that exact SHA.
 - **Merged:** PR #6 read-only reconciliation CLI, PR #7 process-level outage/restart acceptance, PR #8 fee-policy proposal documentation, PR #13 post-PR11 documentation refresh, and PR #14 forced-ETH accounting regression test.
 - **PR #7 verification:** CI run `38837255615` and security run `38837255569` passed on the latest PR head before merge. Current main CI/security runs `38916331756` and `38916331618` passed on exact SHA `f3a398781b30bf35d633e4de4d2bdf39672cd166`.
 - **Blocked:** live reconciliation and testnet deployment require an actual deployed factory; deployment also requires a protected testnet-only deployer key, test ETH, a reviewed fee recipient, and protected environment reviewers.
 - **Merged:** PR #18 economic regression tests, PR #19 gas instrumentation, PR #22 preliminary source-based economic/MEV review, PR #23 restart/resume E2E, PR #25 measured gas receipt baseline, and PR #26 API database-outage readiness plus fail-closed endpoint guards.
-- **Not complete:** external-provider outage drill, backup/restore drill, independent contract audit, owner decision on residual MEV sandwich risk, live testnet reconciliation and deployment.
+- **Not complete:** a real external-provider outage drill (simulated process-level outage tests are CI evidence only), durable backup retention and protected-environment operator restore, independent contract audit, owner decision on residual MEV sandwich risk, live testnet reconciliation and deployment.
+- **Completed in PR #28:** guarded PostgreSQL backup/restore CI fixture drill; PR CI `38936723431` and security `38936723423` passed. This does not establish durable backup retention or a protected-environment recovery.
 - **Safety boundary:** no mainnet configuration, deployment, or real-value transaction is authorized by this roadmap.
 
 ## Phase 0 — Foundation and specification

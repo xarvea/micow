@@ -181,7 +181,6 @@ integrationDescribe("indexer process recovery", () => {
     await delay(150);
     expect(rpcRequests).toBeGreaterThan(0);
     rpcHealthy = true;
-
     await waitFor(async () => {
       const result = await pool.query(
         "SELECT block_number::text FROM indexed_blocks WHERE chain_id = $1 ORDER BY block_number DESC LIMIT 1",
@@ -190,32 +189,69 @@ integrationDescribe("indexer process recovery", () => {
       return result.rows[0]?.block_number === "10";
     }, "the first process to persist block 10");
 
-    await stopIndexer(first.child, first.output);
-    const firstCheckpoint = await pool.query(
-      "SELECT block_number::text, block_hash FROM indexed_blocks WHERE chain_id = $1 ORDER BY block_number",
+    // Prove a previously healthy worker does not advance its durable checkpoint
+    // when the provider fails during a later indexing cycle.
+    rpcHealthy = false;
+    head = 11n;
+    const requestsBeforeOutage = rpcRequests;
+    await waitFor(() => rpcRequests > requestsBeforeOutage, "the post-checkpoint RPC outage to be observed");
+    await delay(250);
+
+    const checkpointDuringOutage = await pool.query(
+      "SELECT block_number::text FROM indexed_blocks WHERE chain_id = $1 ORDER BY block_number",
       [46630],
     );
-    expect(firstCheckpoint.rows).toEqual([{
-      block_number: "10",
-      block_hash: "0x" + "a".padStart(64, "0"),
-    }]);
+    expect(checkpointDuringOutage.rows.map((row: { block_number: string }) => row.block_number)).toEqual(["10"]);
+    const prematureBlock = await pool.query(
+      "SELECT 1 FROM indexed_blocks WHERE chain_id = $1 AND block_number = 11",
+      [46630],
+    );
+    expect(prematureBlock.rowCount).toBe(0);
 
-    head = 11n;
-    const second = startIndexer();
+    rpcHealthy = true;
     await waitFor(async () => {
       const result = await pool.query(
         "SELECT block_number::text FROM indexed_blocks WHERE chain_id = $1 AND block_number = 11",
         [46630],
       );
       return result.rowCount === 1;
-    }, "the restarted process to resume at block 11");
+    }, "the worker to recover and persist block 11");
+
+    await stopIndexer(first.child, first.output);
+    const firstCheckpoint = await pool.query(
+      "SELECT block_number::text, block_hash FROM indexed_blocks WHERE chain_id = $1 ORDER BY block_number",
+      [46630],
+    );
+    expect(firstCheckpoint.rows).toEqual([
+      { block_number: "10", block_hash: "0x" + "a".padStart(64, "0") },
+      { block_number: "11", block_hash: "0x" + "b".padStart(64, "0") },
+    ]);
+
+    head = 12n;
+    const second = startIndexer();
+    await waitFor(async () => {
+      const result = await pool.query(
+        "SELECT block_number::text FROM indexed_blocks WHERE chain_id = $1 AND block_number = 12",
+        [46630],
+      );
+      return result.rowCount === 1;
+    }, "the restarted process to resume at block 12");
 
     await stopIndexer(second.child, second.output);
     const checkpoints = await pool.query(
       "SELECT block_number::text FROM indexed_blocks WHERE chain_id = $1 ORDER BY block_number",
       [46630],
     );
-    expect(checkpoints.rows.map((row: { block_number: string }) => row.block_number)).toEqual(["10", "11"]);
+    expect(checkpoints.rows.map((row: { block_number: string }) => row.block_number)).toEqual(["10", "11", "12"]);
+    const blockCounts = await pool.query(
+      "SELECT block_number::text, count(*)::int AS count FROM indexed_blocks WHERE chain_id = $1 GROUP BY block_number ORDER BY block_number",
+      [46630],
+    );
+    expect(blockCounts.rows).toEqual([
+      { block_number: "10", count: 1 },
+      { block_number: "11", count: 1 },
+      { block_number: "12", count: 1 },
+    ]);
     expect(first.output()).toMatch(/RPC operation getChainId failed|RPC unavailable during indexer startup/);
     expect(second.output()).toMatch(/MICOW indexer started on chain 46630/);
   }, 45_000);

@@ -1,6 +1,6 @@
 # MICOW Master TODO
 
-Status snapshot 2026-10-16: PR #27 merged to `main` as `01530237c7d6cd2d4a88322365a4aa2d6037ef22`. Post-merge CI `38934626188` and security `38934626176` passed on that exact SHA. No deployment transaction was broadcast.
+Status snapshot 2026-10-16: PR #28 merged to `main` as `02c314518e64318e6a88a4c76f52daf1fcfa2a5b`. Main CI `38940734418` and security `38940734236` passed on that exact SHA. PR #28 CI `38936723431` and security `38936723423` passed. No deployment transaction was broadcast.
 
 Status values: PENDING, IN_PROGRESS, BLOCKED, COMPLETED, NOT_VERIFIED. A checked implementation task is not a claim that its acceptance tests passed.
 
@@ -101,7 +101,7 @@ Status values: PENDING, IN_PROGRESS, BLOCKED, COMPLETED, NOT_VERIFIED. A checked
 
 ## P8 — Testnet launch readiness
 - [x] Publish build, deployment, and operations runbooks.
-- [ ] Run backup/restore drill. A guarded local restore verifier and CI fixture drill are proposed in PR for review; this item remains open until CI evidence is green.
+- [x] Add guarded PostgreSQL backup/restore verifier and deterministic CI fixture drill (PR #28 merged as `02c314518e64318e6a88a4c76f52daf1fcfa2a5b`; PR CI `38936723431` and security `38936723423` passed). This completes the automated CI drill only, not durable backup retention or an operator-run protected-environment restore.
 - [x] Exercise database reorg rollback/replay in PostgreSQL CI.
 - [x] Test bounded RPC retry and backoff with unit tests.
 - [ ] Run RPC outage recovery drill against an unavailable/recovering provider.

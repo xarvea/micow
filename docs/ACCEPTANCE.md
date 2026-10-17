@@ -1,6 +1,6 @@
 # Acceptance Criteria and Phase Gates
 
-Status as of 2026-10-16: P5 local integration and release-gate hardening. PR #26 merged as `d9a12a94bd146036a7e1d7b579e6eb54536fd93e`; post-merge CI `38930901087` and security `38930901199` are the checks for that SHA, and final conclusions must be verified before release sign-off. No deployment transaction or public-chain broadcast was performed. Live reconciliation/deployment remain blocked pending approved testnet-only credentials, test ETH, reviewed treasury recipient, and protected-environment reviewer verification.
+Status as of 2026-10-16: P8 testnet launch-readiness hardening, testnet-only. PR #28 merged as `02c314518e64318e6a88a4c76f52daf1fcfa2a5b`; its PR CI `38936723431` and security `38936723423` passed. Post-merge main CI `38940734418` and security `38940734236` passed on that exact SHA. No deployment transaction or public-chain broadcast was performed. Live reconciliation/deployment remain blocked pending approved testnet-only credentials, test ETH, reviewed treasury recipient, and protected-environment reviewer verification.
 
 ## F0 — Foundation and specification
 
@@ -69,8 +69,8 @@ Status as of 2026-10-16: P5 local integration and release-gate hardening. PR #26
 
 ## P8 — Backup and restore recovery drill
 
-- [ ] CI seeds deterministic PostgreSQL fixture rows, creates a separate empty restore database, and verifies custom-format backup/restore preserves indexed block/event/token/trade counts and maximum indexed block.
-- [ ] CI verifies the restore script rejects a non-empty target without overwriting its contents.
+- [x] CI seeds deterministic PostgreSQL fixture rows, creates a separate empty restore database, and verifies custom-format backup/restore preserves indexed block/event/token/trade counts and maximum indexed block (PR #28; CI `38936723431` passed on the PR head).
+- [x] CI verifies the restore script rejects a non-empty target without overwriting its contents (PR #28; CI `38936723431` passed on the PR head).
 - [ ] For a real operational restore, verify token/trade counts and maximum indexed block, then run read-only reconciliation against a deployed factory; this remains blocked until a testnet factory exists.
 - [ ] Durable backup retention, access control, and an operator-run restore against a protected testnet-like environment remain separate operational acceptance items.
 
