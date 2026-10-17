@@ -66,10 +66,12 @@ Status as of 2026-10-17: P8 testnet launch-readiness hardening, testnet-only. PR
 - [x] Negative CI cases reject public testnet RPC, remote database host, and remote API/web URLs before any deployment command.
 - [x] API `/health` remains available while PostgreSQL is unavailable and `/ready` returns HTTP 503; readiness returns HTTP 200 with a healthy database.
 - [x] Reapply migrations, create/buy/sell locally, verify API/indexer projections, restart/resume checkpoint without duplicate trades, and cleanly stop services.
-- [ ] Real external-provider outage drill remains NOT_VERIFIED; the process-level outage is simulated in CI only.
 - [ ] Manual run on a user-managed Ubuntu host remains NOT_VERIFIED; CI E2E is the current evidence.
 
-## P8 — Backup and restore recovery drill
+## P8 — Backup, restore, and RPC recovery drills
+
+- [x] Process-level RPC outage/recovery test verifies durable checkpoint freeze while the provider is unavailable, exactly-once checkpoint persistence after recovery, and restart at the next block without duplicates (PR #29; PR CI `38941007407`, security `38941007357`; post-merge main CI `39004061960`, security `39004061854` passed on `7074f7b5dc8b0bcf912d7b8fca4f253227734dfa`).
+- [ ] Real external-provider outage drill remains NOT_VERIFIED; the process-level outage is simulated in CI only.
 
 - [x] CI seeds deterministic PostgreSQL fixture rows, creates a separate empty restore database, and verifies custom-format backup/restore preserves indexed block/event/token/trade counts and maximum indexed block (PR #28; CI `38936723431` passed on the PR head).
 - [x] CI verifies the restore script rejects a non-empty target without overwriting its contents (PR #28; CI `38936723431` passed on the PR head).
