@@ -4,7 +4,7 @@ MICOW is an independently implemented, testnet-only EVM token launchpad targetin
 
 ## Current delivery status
 
-Documentation snapshot: 2026-10-16. PR #28 merged as `02c314518e64318e6a88a4c76f52daf1fcfa2a5b`. Main CI `38940734418` and security `38940734236` passed on that exact SHA. PR #28 CI `38936723431` and security `38936723423` passed. No deployment transaction or public-chain broadcast was performed.
+Documentation snapshot: 2026-10-17. PR #29 merged to `main` as `7074f7b5dc8b0bcf912d7b8fca4f253227734dfa`. Post-merge main CI `39004061960` and security `39004061854` passed on that exact SHA. PR #29 CI `38941007407` and security `38941007357` passed on its head. No deployment transaction or public-chain broadcast was performed.
 
 - [x] Clean-room Git history established.
 - [x] Product scope, architecture, threat model, roadmap, build/deployment runbooks, operations, and acceptance gates documented.
@@ -29,7 +29,7 @@ Never treat this repository as audited or production-ready. Mainnet deployment i
 
 ## Current phase
 
-**P8 — Testnet launch-readiness hardening.** Full local service E2E covers API health/readiness during PostgreSQL outage, migration reapply, local Anvil create/buy/sell, indexer checkpoint resume/idempotent replay, and clean shutdown. PR #28 adds a guarded PostgreSQL backup/restore CI drill; its PR CI and security checks passed. This does not prove durable backup retention or protected-environment restore. A stronger simulated RPC outage test is in progress to verify checkpoint freeze, recovery, and restart without duplicate checkpoints. P4 live reconciliation remains blocked until a testnet factory is deployed. Independent audit, owner MEV-risk decision, and testnet deployment remain incomplete.
+**P8 — Testnet launch-readiness hardening.** Full local service E2E covers API health/readiness during PostgreSQL outage, migration reapply, local Anvil create/buy/sell, indexer checkpoint resume/idempotent replay, and clean shutdown. PR #28 adds a guarded PostgreSQL backup/restore CI drill; its PR CI/security and post-merge main CI/security passed. PR #29 verifies process-level RPC outage checkpoint freeze, recovery, and restart without duplicate checkpoints; its PR CI/security and post-merge main CI/security passed. This does not prove durable backup retention or protected-environment restore. A real external-provider outage drill remains incomplete. P4 live reconciliation remains blocked until a testnet factory is deployed. Independent audit, owner MEV-risk decision, and testnet deployment remain incomplete.
 
 ## Stack
 

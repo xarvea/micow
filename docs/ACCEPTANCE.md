@@ -1,6 +1,6 @@
 # Acceptance Criteria and Phase Gates
 
-Status as of 2026-10-16: P8 testnet launch-readiness hardening, testnet-only. PR #28 merged as `02c314518e64318e6a88a4c76f52daf1fcfa2a5b`; its PR CI `38936723431` and security `38936723423` passed. Post-merge main CI `38940734418` and security `38940734236` passed on that exact SHA. No deployment transaction or public-chain broadcast was performed. Live reconciliation/deployment remain blocked pending approved testnet-only credentials, test ETH, reviewed treasury recipient, and protected-environment reviewer verification.
+Status as of 2026-10-17: P8 testnet launch-readiness hardening, testnet-only. PR #29 merged as `7074f7b5dc8b0bcf912d7b8fca4f253227734dfa`; post-merge main CI `39004061960` and security `39004061854` passed on that exact SHA. PR #29 CI `38941007407` and security `38941007357` passed on its head. No deployment transaction or public-chain broadcast was performed. Live reconciliation/deployment remain blocked pending approved testnet-only credentials, test ETH, reviewed treasury recipient, and protected-environment reviewer verification.
 
 ## F0 — Foundation and specification
 
@@ -55,6 +55,7 @@ Status as of 2026-10-16: P8 testnet launch-readiness hardening, testnet-only. PR
 - [x] PostgreSQL failure-injection test proves event and checkpoint writes roll back atomically when projection validation fails.
 - [x] Unit test verifies the worker continues after a transient cycle failure and exits cleanly on shutdown.
 - [x] PostgreSQL integration test verifies restart resumes from the first block after the last durable checkpoint.
+- [x] PR #29 process-level RPC outage/recovery test verifies checkpoint freeze during provider failure, exactly-once persistence after recovery, and restart resume at the next block without duplicates. PR CI `38941007407` and security `38941007357`; post-merge main CI `39004061960` and security `39004061854` passed on `7074f7b5dc8b0bcf912d7b8fca4f253227734dfa`.
 - [x] PR #7 process-level worker restart/RPC outage acceptance passed on the PR head: isolated PostgreSQL + simulated RPC outage, checkpoint persistence, graceful SIGTERM, restart resume. Later main CI/security runs passed, including CI `38916331756` and security `38916331618` on exact main SHA `f3a398781b30bf35d633e4de4d2bdf39672cd166`.
 - [x] Add a read-only reconciliation CLI for database projection and on-chain factory/market consistency.
 - [ ] Run reconciliation against a deployed testnet factory and verify controlled drift detection.
@@ -67,7 +68,10 @@ Status as of 2026-10-16: P8 testnet launch-readiness hardening, testnet-only. PR
 - [x] Reapply migrations, create/buy/sell locally, verify API/indexer projections, restart/resume checkpoint without duplicate trades, and cleanly stop services.
 - [ ] Manual run on a user-managed Ubuntu host remains NOT_VERIFIED; CI E2E is the current evidence.
 
-## P8 — Backup and restore recovery drill
+## P8 — Backup, restore, and RPC recovery drills
+
+- [x] Process-level RPC outage/recovery test verifies durable checkpoint freeze while the provider is unavailable, exactly-once checkpoint persistence after recovery, and restart at the next block without duplicates (PR #29; PR CI `38941007407`, security `38941007357`; post-merge main CI `39004061960`, security `39004061854` passed on `7074f7b5dc8b0bcf912d7b8fca4f253227734dfa`).
+- [ ] Real external-provider outage drill remains NOT_VERIFIED; the process-level outage is simulated in CI only.
 
 - [x] CI seeds deterministic PostgreSQL fixture rows, creates a separate empty restore database, and verifies custom-format backup/restore preserves indexed block/event/token/trade counts and maximum indexed block (PR #28; CI `38936723431` passed on the PR head).
 - [x] CI verifies the restore script rejects a non-empty target without overwriting its contents (PR #28; CI `38936723431` passed on the PR head).

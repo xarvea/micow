@@ -1,6 +1,6 @@
 # MICOW Master TODO
 
-Status snapshot 2026-10-16: PR #28 merged to `main` as `02c314518e64318e6a88a4c76f52daf1fcfa2a5b`. Main CI `38940734418` and security `38940734236` passed on that exact SHA. PR #28 CI `38936723431` and security `38936723423` passed. No deployment transaction was broadcast.
+Status snapshot 2026-10-17: PR #29 merged to `main` as `7074f7b5dc8b0bcf912d7b8fca4f253227734dfa`. Post-merge main CI `39004061960` and security `39004061854` passed on that exact SHA. PR #29 CI `38941007407` and security `38941007357` passed on its head. No deployment transaction was broadcast.
 
 Status values: PENDING, IN_PROGRESS, BLOCKED, COMPLETED, NOT_VERIFIED. A checked implementation task is not a claim that its acceptance tests passed.
 
@@ -104,7 +104,8 @@ Status values: PENDING, IN_PROGRESS, BLOCKED, COMPLETED, NOT_VERIFIED. A checked
 - [x] Add guarded PostgreSQL backup/restore verifier and deterministic CI fixture drill (PR #28 merged as `02c314518e64318e6a88a4c76f52daf1fcfa2a5b`; PR CI `38936723431` and security `38936723423` passed). This completes the automated CI drill only, not durable backup retention or an operator-run protected-environment restore.
 - [x] Exercise database reorg rollback/replay in PostgreSQL CI.
 - [x] Test bounded RPC retry and backoff with unit tests.
-- [ ] Run RPC outage recovery drill against an unavailable/recovering provider.
+- [x] CI process-level RPC outage/recovery drill: freeze durable checkpoint while provider is unavailable, recover and persist the next checkpoint once, restart at the next block without duplicates (PR #29; PR CI `38941007407`, security `38941007357`; post-merge main CI `39004061960`, security `39004061854` passed on `7074f7b5dc8b0bcf912d7b8fca4f253227734dfa`).
+- [ ] Run a real external-provider outage drill against an unavailable/recovering provider; CI simulation is not a substitute for provider-specific operational validation.
 - [ ] Review threat model and unresolved findings; obtain explicit owner decision on residual sandwich/MEV risk.
 - [ ] Complete launch readiness checklist.
 
